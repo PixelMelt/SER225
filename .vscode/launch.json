@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Run Game",
+      "request": "launch",
+      "mainClass": "Game.Game",
+      "sourcePaths": ["${workspaceFolder}/src"],
+      "cwd": "${workspaceFolder}",
+      "args": [],
+      "noDebug": false,
+      "console": "integratedTerminal"
+    }
+  ]
+}
