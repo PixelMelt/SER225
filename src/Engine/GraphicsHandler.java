@@ -1,7 +1,6 @@
 package Engine;
 
 import GameObject.ImageEffect;
-
 import java.awt.*;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
@@ -10,6 +9,7 @@ import java.awt.image.BufferedImage;
 
 public class GraphicsHandler {
     private Graphics2D g;
+    private boolean enableScaling = true;
 
     public Graphics2D getGraphics() {
         return g;
@@ -17,6 +17,14 @@ public class GraphicsHandler {
 
     public void setGraphics(Graphics2D g) {
         this.g = g;
+        // Apply scaling transform to render at higher resolution
+        if (enableScaling) {
+            this.g.scale(Config.SCALE_FACTOR, Config.SCALE_FACTOR);
+        }
+    }
+
+    public void setScalingEnabled(boolean enabled) {
+        this.enableScaling = enabled;
     }
 
     public void drawImage(BufferedImage image, int x, int y) {

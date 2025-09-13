@@ -33,12 +33,12 @@ public class ScreenManager {
 
     // gets width of currentScreen -- can be called from anywhere in an application
     public static int getScreenWidth() {
-        return screenBounds.getWidth();
+        return Config.BASE_GAME_WIDTH;
     }
 
     // gets height of currentScreen -- can be called from anywhere in an application
     public static int getScreenHeight() {
-        return screenBounds.getHeight();
+        return Config.BASE_GAME_HEIGHT;
     }
 
     // gets bounds of currentScreen -- can be called from anywhere in an application

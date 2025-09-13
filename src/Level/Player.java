@@ -35,7 +35,6 @@ public abstract class Player extends GameObject {
     private static final float CROUCH_FRICTION_MULTIPLIER = 0.8f;
     private static final float LEVEL_COMPLETE_SPEED_MULTIPLIER = 0.5f;
     private static final float DEATH_BOUNCE_VELOCITY = 10f;
-    private static final float COLLISION_STOP_THRESHOLD = 0.5f;
 
     // Animation mappings
     private static final Map<PlayerState, String> STATE_ANIMATIONS = Map.of(

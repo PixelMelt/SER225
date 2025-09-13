@@ -1,16 +1,23 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "java",
-      "name": "Run Game",
-      "request": "launch",
-      "mainClass": "Game.Game",
-      "sourcePaths": ["${workspaceFolder}/src"],
-      "cwd": "${workspaceFolder}",
-      "args": [],
-      "noDebug": false,
-      "console": "integratedTerminal"
-    }
-  ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "java",
+			"name": "MapEditor",
+			"request": "launch",
+			"mainClass": "MapEditor.MapEditor",
+			"projectName": "SER225_4762815d"
+		},
+		{
+			"type": "java",
+			"name": "Run Game",
+			"request": "launch",
+			"mainClass": "Game.Game",
+			"sourcePaths": ["${workspaceFolder}/src"],
+			"cwd": "${workspaceFolder}",
+			"args": [],
+			"noDebug": false,
+			"console": "integratedTerminal"
+		}
+	]
 }

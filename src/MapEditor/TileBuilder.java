@@ -26,6 +26,8 @@ public class TileBuilder extends JPanel {
         setPreferredSize(new Dimension(585, 562));
         this.controlPanelHolder = controlPanelHolder;
         this.hoveredTileIndexLabel = hoveredTileIndexLabel;
+        // Disable scaling for MapEditor
+        graphicsHandler.setScalingEnabled(false);
         addMouseListener(new MouseListener() {
             @Override
             public void mouseExited(MouseEvent e) {

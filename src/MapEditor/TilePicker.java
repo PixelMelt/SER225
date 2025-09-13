@@ -31,6 +31,8 @@ public class TilePicker extends JPanel {
         setBorder(BorderFactory.createLineBorder(Color.black, 2));
         setLayout(null);
         this.selectedTileIndexHolder = selectedTileIndexHolder;
+        // Disable scaling for MapEditor
+        graphicsHandler.setScalingEnabled(false);
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
