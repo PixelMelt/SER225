@@ -7,21 +7,19 @@ import GameObject.Frame;
 import GameObject.ImageEffect;
 import GameObject.SpriteSheet;
 import Level.Player;
-
 import java.util.HashMap;
 
-// This is the class for the Cat player character
-// basically just sets some values for physics and then defines animations
 public class Cat extends Player {
 
     public Cat(float x, float y) {
         super(new SpriteSheet(ImageLoader.load("Cat.png"), 24, 24), x, y, "STAND_RIGHT");
-        gravity = .5f;
-        terminalVelocityY = 6f;
-        jumpHeight = 14.5f;
-        jumpDegrade = .5f;
-        walkSpeed = 2.3f;
-        momentumYIncrease = .5f;
+        gravityAcceleration = 0.5f;
+        maxFallSpeed = 8f;
+        jumpVelocity = 15f;
+        maxHorizontalSpeed = 6f;
+        horizontalAcceleration = 1f;
+        groundFriction = 0.6f;
+        airFriction = 0.5f;
     }
 
     public void update() {
