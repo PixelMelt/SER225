@@ -1,22 +1,3 @@
-
-// On what makes certain movement schemes fitting for certain games
-
-// Mario Bros has long, horizontal areas with elements that are usually
-// fairly spaced out, and travel occurs generally in one direction.
-// Acceleration makes sense because you're in the best flow state when
-// you're moving forward unimpeded. Instant momentum would remove the
-// satisfaction from moving at max speed only because you didn't hit
-// anything or have to turn around, you wouldn't be as rewarded for
-// playing skillfully. Hollow Knight, conversely, has much more compact
-// rooms that feature more vertical movement and generally closer spacing
-// of enemies, platforms, etc. It wouldn't make sense to include acceleration,
-// especially to the degree of Mario, since it'd constantly be interrupted
-// by zigzagging movement or fights with higher-health enemies and the player
-// would just get frustrated by not being allowed to play at full speed.
-// You also aren't limited to a single speed once you get the two dash
-// abilities, neither of which Mario has an equivalent to.
-
-
 package Level;
 
 import Engine.Key;
@@ -35,6 +16,10 @@ public abstract class Player extends GameObject {
     private static final float CROUCH_FRICTION_MULTIPLIER = 0.8f;
     private static final float LEVEL_COMPLETE_SPEED_MULTIPLIER = 0.5f;
     private static final float DEATH_BOUNCE_VELOCITY = 10f;
+    
+    // Jump timing constants
+    private static final int JUMP_BUFFER_FRAMES = 30;  // Buffer jump input for ~100ms at 60fps
+    private static final int COYOTE_TIME_FRAMES = 4000;  // Allow jump ~66ms after leaving ground
 
     // Animation mappings
     private static final Map<PlayerState, String> STATE_ANIMATIONS = Map.of(
@@ -60,8 +45,10 @@ public abstract class Player extends GameObject {
     protected float moveAmountX, moveAmountY;
     protected float lastAmountMovedX, lastAmountMovedY;
 
-    // Jump buffering
-    protected boolean jumpBuffer;
+    // Jump state
+    private int jumpBufferTimer = 0;
+    private int coyoteTimeTimer = 0;
+    private boolean jumpedIntoAir = false;
 
     // State tracking
     protected PlayerState playerState;
@@ -126,7 +113,7 @@ public abstract class Player extends GameObject {
     private void updateRunning() {
         inputState.update();
 
-        updateJumpBuffer();
+        updateJumpTimers();
         updatePhysics();
 
         // Handle state transitions
@@ -134,6 +121,16 @@ public abstract class Player extends GameObject {
             previousPlayerState = playerState;
             handlePlayerState();
         } while (previousPlayerState != playerState);
+
+        if (previousAirGroundState == AirGroundState.GROUND && airGroundState == AirGroundState.AIR && !jumpedIntoAir) {  // Only set coyote time if we didn't jump
+            coyoteTimeTimer = COYOTE_TIME_FRAMES;
+        }
+
+        // Reset jump flag when landing
+        if (previousAirGroundState == AirGroundState.AIR && airGroundState == AirGroundState.GROUND) {
+            jumpedIntoAir = false;
+            coyoteTimeTimer = 0;
+        }
 
         previousAirGroundState = airGroundState;
 
@@ -150,13 +147,17 @@ public abstract class Player extends GameObject {
         super.update();
     }
 
-    private void updateJumpBuffer() {
+    private void updateJumpTimers() {
+        if (jumpBufferTimer > 0) {
+            jumpBufferTimer--;
+        }
+        if (coyoteTimeTimer > 0) {
+            coyoteTimeTimer--;
+        }
+        
         if (inputState.jump && !keyLocker.isKeyLocked(JUMP_KEY)) {
-            if (!jumpBuffer) { // Only set buffer if it's not already set
-                jumpBuffer = true;
-            }
-        } else if (jumpBuffer) {
-            consumeJump();
+            jumpBufferTimer = JUMP_BUFFER_FRAMES;
+            keyLocker.lockKey(JUMP_KEY);
         }
     }
 
@@ -172,7 +173,6 @@ public abstract class Player extends GameObject {
 
     protected void applyFriction() {
         boolean isOnGround = airGroundState == AirGroundState.GROUND;
-
         float currentFriction = isOnGround ? groundFriction : airFriction;
 
         if (velocityX != 0) {
@@ -195,6 +195,33 @@ public abstract class Player extends GameObject {
         }
     }
 
+    // Clean jump check that combines buffer and coyote time
+    private boolean canJump() {
+        // Can't jump if we already jumped (but CAN if we just walked off!)
+        if (jumpedIntoAir) {
+            return false;
+        }
+
+        // Check if we have buffered jump input
+        boolean hasBufferedJump = jumpBufferTimer > 0;
+
+        // Check if we can actually execute the jump
+        boolean onGroundOrCoyoteTime = airGroundState == AirGroundState.GROUND || coyoteTimeTimer > 0;
+
+        return hasBufferedJump && onGroundOrCoyoteTime;
+    }
+
+    private void executeJump() {
+        velocityY = -jumpVelocity;
+        airGroundState = AirGroundState.AIR;
+        jumpedIntoAir = true;
+        jumpBufferTimer = 0;
+        coyoteTimeTimer = 0;
+        playerState = PlayerState.JUMPING;
+
+        currentAnimationName = getAnimationName("JUMP");
+    }
+
     protected void handlePlayerState() {
         switch (playerState) {
             case STANDING -> playerStanding();
@@ -202,21 +229,6 @@ public abstract class Player extends GameObject {
             case CROUCHING -> playerCrouching();
             case JUMPING -> playerJumping();
         }
-    }
-
-    // Helper method to check and handle jump from any ground state
-    private boolean checkAndHandleJump() {
-        if (jumpBuffer && canJump()) {
-            consumeJump();
-            playerState = PlayerState.JUMPING;
-            return true;
-        }
-        return false;
-    }
-
-    private void consumeJump() {
-        jumpBuffer = false;
-        keyLocker.lockKey(JUMP_KEY);
     }
 
     private void applyMovementInput() {
@@ -232,23 +244,29 @@ public abstract class Player extends GameObject {
     }
 
     protected void playerStanding() {
-        if (inputState.moveLeft || inputState.moveRight) {
+        if (canJump()) {
+            executeJump();
+        }
+        else if (inputState.moveLeft || inputState.moveRight) {
             playerState = PlayerState.WALKING;
         }
-        else if (!checkAndHandleJump() && inputState.crouch) {
+        else if (inputState.crouch) {
             playerState = PlayerState.CROUCHING;
         }
     }
 
     protected void playerWalking() {
-        if (!inputState.moveLeft && !inputState.moveRight) {
-            playerState = PlayerState.STANDING;
-        } else {
-            applyMovementInput();
+        if (canJump()) {
+            executeJump();
         }
-
-        if (!checkAndHandleJump() && inputState.crouch) {
-            playerState = PlayerState.CROUCHING;
+        else if (!inputState.moveLeft && !inputState.moveRight) {
+            playerState = PlayerState.STANDING;
+        }
+        else {
+            applyMovementInput();
+            if (inputState.crouch) {
+                playerState = PlayerState.CROUCHING;
+            }
         }
     }
 
@@ -256,44 +274,33 @@ public abstract class Player extends GameObject {
         // Apply extra friction when crouching
         velocityX *= CROUCH_FRICTION_MULTIPLIER;
 
-        if (!inputState.crouch) {
+        if (canJump()) {
+            executeJump();
+        }
+        else if (!inputState.crouch) {
             playerState = PlayerState.STANDING;
         }
-
-        checkAndHandleJump();
     }
 
     protected void playerJumping() {
-        // Initial jump - should only happen once when entering JUMPING state
-        if (previousAirGroundState == AirGroundState.GROUND && airGroundState == AirGroundState.GROUND) {
-            currentAnimationName = getAnimationName("JUMP");
-            airGroundState = AirGroundState.AIR;
-            velocityY = -jumpVelocity;
-            consumeJump();
-        }
-
-        // Air control
-        else if (airGroundState == AirGroundState.AIR) {
+        // Handle air movement AND check for coyote time jumps
+        if (airGroundState == AirGroundState.AIR) {
             applyMovementInput();
+
+            // Check for coyote time jump while falling!
+            if (canJump()) {
+                executeJump();  // This will use up the coyote time
+            }
         }
-        // Landing
-        else if (previousAirGroundState == AirGroundState.AIR && airGroundState == AirGroundState.GROUND) {
-            // Check if jump is buffered for immediate re-jump
-            if (jumpBuffer && !keyLocker.isKeyLocked(JUMP_KEY)) {
-                // Stay in jumping state for immediate re-jump
-                velocityY = -jumpVelocity;
-                airGroundState = AirGroundState.AIR;
-                consumeJump();
+        // Handle landing
+        else if (airGroundState == AirGroundState.GROUND) {
+            // Just landed so check for buffered jump
+            if (canJump()) {
+                executeJump();
             } else {
                 playerState = PlayerState.STANDING;
             }
         }
-    }
-
-    // Helper method to check if player can jump
-    private boolean canJump() {
-        return (airGroundState == AirGroundState.GROUND)
-               && !keyLocker.isKeyLocked(JUMP_KEY);
     }
 
     protected void updateLockedKeys() {
@@ -399,7 +406,6 @@ public abstract class Player extends GameObject {
         // After death animation completes, fall off screen using velocity system
         else if (getCurrentAnimation() != null && currentFrameIndex == getCurrentAnimation().length - 1) {
             if (map.getCamera().containsDraw(this)) {
-                // Apply gravityAcceleration for natural falling
                 applyGravity();
                 // Move using velocity system
                 moveAmountY = velocityY;
