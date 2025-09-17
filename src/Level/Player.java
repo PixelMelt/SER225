@@ -15,11 +15,11 @@ public abstract class Player extends GameObject {
     // Constants
     private static final float CROUCH_FRICTION_MULTIPLIER = 0.8f;
     private static final float LEVEL_COMPLETE_SPEED_MULTIPLIER = 0.5f;
-    private static final float DEATH_BOUNCE_VELOCITY = 10f;
-    
-    // Jump timing constants
-    private static final int JUMP_BUFFER_FRAMES = 30;  // Buffer jump input for ~100ms at 60fps
-    private static final int COYOTE_TIME_FRAMES = 4000;  // Allow jump ~66ms after leaving ground
+    private static final float DEATH_BOUNCE_Y_VELOCITY = 10f;
+
+    // Jump timing
+    private static final int JUMP_BUFFER_FRAMES = 10;
+    private static final int COYOTE_TIME_FRAMES = 7;
 
     // Animation mappings
     private static final Map<PlayerState, String> STATE_ANIMATIONS = Map.of(
@@ -28,7 +28,7 @@ public abstract class Player extends GameObject {
         PlayerState.CROUCHING, "CROUCH"
     );
 
-    // Physics constants - these should be set in a subclass
+    // Physics constants, these should be set in a subclass
     protected float maxHorizontalSpeed;
     protected float horizontalAcceleration;
     protected float groundFriction;
@@ -68,7 +68,7 @@ public abstract class Player extends GameObject {
     protected Key MOVE_RIGHT_KEY = Key.RIGHT;
     protected Key CROUCH_KEY = Key.DOWN;
 
-    // Input state cache
+    // Input state
     private final InputState inputState = new InputState();
 
     // Flags
@@ -154,7 +154,7 @@ public abstract class Player extends GameObject {
         if (coyoteTimeTimer > 0) {
             coyoteTimeTimer--;
         }
-        
+
         if (inputState.jump && !keyLocker.isKeyLocked(JUMP_KEY)) {
             jumpBufferTimer = JUMP_BUFFER_FRAMES;
             keyLocker.lockKey(JUMP_KEY);
@@ -395,7 +395,7 @@ public abstract class Player extends GameObject {
         if (!currentAnimationName.startsWith("DEATH")) {
             currentAnimationName = getAnimationName("DEATH");
             // Reset y velocity for death animation
-            velocityY = -DEATH_BOUNCE_VELOCITY;
+            velocityY = -DEATH_BOUNCE_Y_VELOCITY;
             velocityX = velocityX / 2; // Keep some horizontal momentum
             super.update();
         }
