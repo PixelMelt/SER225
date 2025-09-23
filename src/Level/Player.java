@@ -5,8 +5,6 @@ import Engine.KeyLocker;
 import Engine.Keyboard;
 import GameObject.GameObject;
 import GameObject.SpriteSheet;
-import GameObject.ImageEffect;
-import GameObject.Frame;
 import Utils.AirGroundState;
 import Utils.Direction;
 import java.util.ArrayList;
@@ -14,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class Player extends GameObject {
-    // Death animation timer
-    private int deathAnimationTimer = 0;
     // Constants
     private static final float CROUCH_FRICTION_MULTIPLIER = 0.8f;
     private static final float LEVEL_COMPLETE_SPEED_MULTIPLIER = 0.5f;
@@ -395,19 +391,32 @@ public abstract class Player extends GameObject {
     }
 
     public void updatePlayerDead() {
-        // Flip the sprite vertically to indicate death
-        Frame[] frames = getCurrentAnimation();
-        if (frames != null) {
-            for (Frame frame : frames) {
-                frame.setImageEffect(ImageEffect.FLIP_VERTICAL);
-            }
+        // Set death animation on first frame of death
+        if (!currentAnimationName.startsWith("DEATH")) {
+            currentAnimationName = getAnimationName("DEATH");
+            // Reset y velocity for death animation
+            velocityY = -DEATH_BOUNCE_Y_VELOCITY;
+            velocityX = velocityX / 2; // Keep some horizontal momentum
+            super.update();
         }
-        // still showing death animation but shorter
-        if (deathAnimationTimer < 10) { 
-            deathAnimationTimer++;
-        } else {
-            deathAnimationTimer = 0;
-            notifyDeath();
+        // Continue playing death animation
+        else if (getCurrentAnimation() != null && currentFrameIndex != getCurrentAnimation().length - 1) {
+            super.update();
+        }
+        // After death animation completes, fall off screen using velocity system
+        else if (getCurrentAnimation() != null && currentFrameIndex == getCurrentAnimation().length - 1) {
+            if (map.getCamera().containsDraw(this)) {
+                applyGravity();
+                // Move using velocity system
+                moveAmountY = velocityY;
+                moveAmountX = velocityX;
+                // Apply the movement without collision checking for death fall
+                moveY(moveAmountY);
+                moveX(moveAmountX);
+            } else {
+                // Player has fallen off screen, notify listeners
+                notifyDeath();
+            }
         }
     }
 

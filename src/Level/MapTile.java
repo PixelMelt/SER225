@@ -71,4 +71,9 @@ public class MapTile extends MapEntity {
         }
         */
     }
+
+    public boolean isSolid() {
+        // Solid means NOT_PASSABLE in this engine
+        return tileType == TileType.NOT_PASSABLE;
+    }
 }
