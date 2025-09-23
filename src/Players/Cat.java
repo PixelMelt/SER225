@@ -92,7 +92,7 @@ public class Cat extends Player {
 
             Camera camera = map.getCamera();
 
-            // anchor line to the *center* of the cat’s current bounding box
+            // anchor line to the center of the cat’s current bounding box
             int startX = (int) (getCenterX() - camera.getX());
             int startY = (int) (getCenterY() - camera.getY());
 
