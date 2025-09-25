@@ -13,7 +13,7 @@ public class Config {
     public static final String MAP_FILES_PATH = "MapFiles/";
     public static final int BASE_GAME_WIDTH = 800;
     public static final int BASE_GAME_HEIGHT = 605;
-    public static final float SCALE_FACTOR = 2.0f;
+    public static final float SCALE_FACTOR = 1.0f;
     public static final int GAME_WINDOW_WIDTH = (int) (BASE_GAME_WIDTH * SCALE_FACTOR);
     public static final int GAME_WINDOW_HEIGHT = (int) (BASE_GAME_HEIGHT * SCALE_FACTOR);
 
