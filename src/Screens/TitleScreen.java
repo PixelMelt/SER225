@@ -5,6 +5,7 @@ import Game.GameState;
 import Game.ScreenCoordinator;
 import SpriteFont.SpriteFont;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import javax.swing.Timer;
 
 public class TitleScreen extends Screen {
@@ -14,6 +15,7 @@ public class TitleScreen extends Screen {
     protected Color transparent;
     protected Timer fadeTimer;
 
+    private BufferedImage titleImage;
     private float alpha = 1.0f;
     private boolean fadingOut = true;
     
@@ -24,7 +26,7 @@ public class TitleScreen extends Screen {
 
     @Override
     public void initialize() {
-
+        titleImage = ImageLoader.load("title.png");
         
         title = new SpriteFont("Speed Step", Config.BASE_GAME_WIDTH/8, 125, "Courier New", 100, Color.white);
         title.setOutlineColor(Color.black);
@@ -66,8 +68,11 @@ public class TitleScreen extends Screen {
     }
 
     public void draw(GraphicsHandler graphicsHandler) {
+        graphicsHandler.drawFilledRectangle(0, 0, Config.BASE_GAME_WIDTH, Config.BASE_GAME_HEIGHT, new Color(153, 217, 234));
+
+        graphicsHandler.drawImage(titleImage, 0, 0, Config.BASE_GAME_WIDTH, Config.BASE_GAME_HEIGHT);
         
-        title.draw(graphicsHandler);
+        //title.draw(graphicsHandler);
         menuChange.draw(graphicsHandler);
     }
 }
