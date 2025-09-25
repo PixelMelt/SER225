@@ -5,12 +5,12 @@ import Enemies.DinosaurEnemy;
 import Engine.ImageLoader;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.HorizontalMovingPlatform;
+import EnhancedMapTiles.VerticalMovingPlatform;
 import GameObject.Rectangle;
 import Level.*;
 import NPCs.Walrus;
 import Tilesets.CommonTileset;
 import Utils.Direction;
-
 import java.util.ArrayList;
 
 // Represents a test map to be used in a level
@@ -39,15 +39,26 @@ public class TestMap extends Map {
         ArrayList<EnhancedMapTile> enhancedMapTiles = new ArrayList<>();
 
         HorizontalMovingPlatform hmp = new HorizontalMovingPlatform(
-                ImageLoader.load("GreenPlatform.png"),
+                ImageLoader.load("HorizontallyMovingPlatform.png"),
                 getMapTile(24, 6).getLocation(),
                 getMapTile(27, 6).getLocation(),
                 TileType.JUMP_THROUGH_PLATFORM,
                 3,
-                new Rectangle(0, 6,16,4),
+                new Rectangle(0, 0,16,16),
                 Direction.RIGHT
         );
         enhancedMapTiles.add(hmp);
+
+        VerticalMovingPlatform vmp = new VerticalMovingPlatform(
+                ImageLoader.load("VerticallyMovingPlatform.png"),
+                getMapTile(28, 8).getLocation(),
+                getMapTile(28, 9).getLocation(),
+                TileType.JUMP_THROUGH_PLATFORM,
+                3,
+                new Rectangle(0, 0,16,16),
+                Direction.UP
+        );
+        enhancedMapTiles.add(vmp);
 
         EndLevelBox endLevelBox = new EndLevelBox(getMapTile(32, 7).getLocation());
         enhancedMapTiles.add(endLevelBox);
