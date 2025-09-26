@@ -3,21 +3,19 @@ package Players;
 import Builders.FrameBuilder;
 import Engine.GraphicsHandler;
 import Engine.ImageLoader;
-import Engine.Mouse;
-import Engine.Keyboard;
 import Engine.Key;
+import Engine.Keyboard;
+import Engine.Mouse;
 import GameObject.Frame;
 import GameObject.ImageEffect;
 import GameObject.SpriteSheet;
-import Level.Player;
-import Level.Map;
 import Level.Camera;
 import Level.MapTile;
+import Level.Player;
 import Utils.Point;
-
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.BasicStroke;
 import java.util.HashMap;
 
 public class Cat extends Player {
@@ -235,7 +233,7 @@ public class Cat extends Player {
             put("CROUCH_RIGHT", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(4, 0))
                             .withScale(3)
-                            .withBounds(8, 12, 8, 6)
+                            .withBounds(3, 5, 17, 17)
                             .build()
             });
 
@@ -243,7 +241,7 @@ public class Cat extends Player {
                     new FrameBuilder(spriteSheet.getSprite(4, 0))
                             .withScale(3)
                             .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
-                            .withBounds(8, 12, 8, 6)
+                            .withBounds(3, 5, 17, 17)
                             .build()
             });
 
