@@ -2,10 +2,8 @@ package Engine;
 
 import GameObject.Rectangle;
 import SpriteFont.SpriteFont;
-import Utils.Colors;
-
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
 
 /*
  * This is where the game loop process and render back buffer is setup
@@ -62,7 +60,6 @@ public class GamePanel extends JPanel {
 	// this is called later after instantiation, and will initialize screenManager
 	// this had to be done outside of the constructor because it needed to know the JPanel's width and height, which aren't available in the constructor
 	public void setupGame() {
-		setBackground(Colors.CORNFLOWER_BLUE);
 		screenManager.initialize(new Rectangle(getX(), getY(), getWidth(), getHeight()));
 	}
 
@@ -131,7 +128,7 @@ public class GamePanel extends JPanel {
 	}
 
 	@Override
-	protected void paintComponent(Graphics g) {
+	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		if (doPaint) {
 			// every repaint call will schedule this method to be called

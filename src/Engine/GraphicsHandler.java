@@ -82,6 +82,18 @@ public class GraphicsHandler {
         g.setColor(oldColor);
     }
 
+    public void drawFilledRectangleRotated(int x, int y, int width, int height, Color color, double angleDegrees) {
+        Color oldColor = g.getColor();
+        AffineTransform oldTransform = g.getTransform();
+
+        g.setColor(color);
+        g.rotate(Math.toRadians(angleDegrees), x + width / 2.0, y + height / 2.0);
+        g.fillRect(x, y, width, height);
+
+        g.setTransform(oldTransform);
+        g.setColor(oldColor);
+    }
+
     public void drawFilledRectangleWithBorder(int x, int y, int width, int height, Color fillColor, Color borderColor, int borderThickness) {
         drawFilledRectangle(x, y, width, height, fillColor);
         drawRectangle(x, y, width, height, borderColor, borderThickness);

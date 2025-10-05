@@ -3,8 +3,8 @@ package Level;
 import Engine.Config;
 import Engine.GraphicsHandler;
 import Engine.ScreenManager;
+import Utils.Colors;
 import Utils.Point;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -394,7 +394,38 @@ public abstract class Map {
     }
 
     public void draw(GraphicsHandler graphicsHandler) {
+        drawParallaxBackground(graphicsHandler);
         camera.draw(graphicsHandler);
+    }
+
+    private void drawParallaxBackground(GraphicsHandler graphicsHandler) {
+        float cameraX = camera.getX();
+        float cameraY = camera.getY();
+
+        // Parallax factor speed vs camera
+        float parallaxFactor = 0.3f;
+
+        // Calculate offset based on camera position
+        int offsetX = (int)(cameraX * parallaxFactor);
+        int offsetY = (int)(cameraY * parallaxFactor);
+
+        // Draw rectangles every 100 units
+        int spacing = 200;
+        int rectSize = 40;
+
+        graphicsHandler.drawFilledRectangle(0, 0, ScreenManager.getScreenWidth(), ScreenManager.getScreenHeight(), Colors.WHITE);
+
+        // Calculate how many rectangles to draw based on screen size
+        int startX = -(offsetX % spacing) - spacing;
+        int startY = -(offsetY % spacing) - spacing;
+        int endX = ScreenManager.getScreenWidth() + spacing;
+        int endY = ScreenManager.getScreenHeight() + spacing;
+
+        for (int x = startX; x < endX; x += spacing) {
+            for (int y = startY; y < endY; y += spacing) {
+                graphicsHandler.drawFilledRectangleRotated(x, y, rectSize, rectSize, Colors.CORNFLOWER_BLUE, 45);
+            }
+        }
     }
 
     public int getEndBoundX() { return endBoundX; }
