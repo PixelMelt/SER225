@@ -13,6 +13,7 @@ import Level.Camera;
 import Level.MapTile;
 import Level.Player;
 import Utils.Point;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -23,6 +24,19 @@ public class Cat extends Player {
     // Grapple variables
     private boolean isGrappling = false;
     private Point grappleTarget;
+    private float ropeLength;
+    private float swingAngle;
+    private float swingVelocity;
+    private float swingAcceleration;
+    private float gravity = 0.4f;
+
+    // release momentum
+    private boolean applyingReleaseMomentum = false;
+    private float releaseVx = 0f;
+    private float releaseVy = 0f;
+
+    private final float RELEASE_DAMPING = 0.95f; 
+    private final float RELEASE_THRESHOLD = 0.3f;
 
     public Cat(float x, float y) {
         super(new SpriteSheet(ImageLoader.load("Cat.png"), 24, 24), x, y, "STAND_RIGHT");
@@ -38,45 +52,113 @@ public class Cat extends Player {
     @Override
     public void update() {
         super.update();
-
         Camera camera = map.getCamera();
 
-        // Start grapple on left click
+        // momentum carry
+        if (applyingReleaseMomentum) {
+            moveX(releaseVx);
+            moveY(releaseVy);
+
+            // gradually reduce over time
+            releaseVx *= RELEASE_DAMPING;
+            releaseVy *= RELEASE_DAMPING;
+
+            if (Math.abs(releaseVx) < RELEASE_THRESHOLD && Math.abs(releaseVy) < RELEASE_THRESHOLD) {
+                applyingReleaseMomentum = false;
+            }
+        }
+
+        // Start grapple
         if (Mouse.wasClicked()) {
-            // Convert mouse screen coordinates into world coordinates
             float worldX = Mouse.getX() + camera.getX();
             float worldY = Mouse.getY() + camera.getY();
+            Point hit = findGrappleTarget(worldX, worldY);
+            if (hit != null) {
+                grappleTarget = hit;
+                isGrappling = true;
 
-            // Only allow grapple if a solid tile exists along the path
-            grappleTarget = findGrappleTarget(worldX, worldY);
-            isGrappling = (grappleTarget != null);
+                float dx = grappleTarget.x - getCenterX();
+                float dy = grappleTarget.y - getCenterY();
+                ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
+
+                swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
+                swingVelocity = 0f;
+
+                applyingReleaseMomentum = false;
+                releaseVx = 0;
+                releaseVy = 0;
+            }
             Mouse.resetClick();
         }
 
-        // Cancel grapple if player moves (left, right, jump)
-        if (isGrappling) {
-            if (Keyboard.isKeyDown(Key.LEFT) || Keyboard.isKeyDown(Key.RIGHT) || Keyboard.isKeyDown(Key.UP)) {
-                isGrappling = false;
-                grappleTarget = null;
-            }
+        // Cancel grapple
+        if (isGrappling && (Keyboard.isKeyDown(Key.UP) || Mouse.wasClicked())) {
+            releaseGrapple();
         }
 
-        // Pull toward grapple target
+        // Grapple physics
         if (isGrappling && grappleTarget != null) {
-            double dx = grappleTarget.x - getCenterX();
-            double dy = grappleTarget.y - getCenterY();
-            double distance = Math.sqrt(dx * dx + dy * dy);
-
-            // RELEASE if too close to avoid jitter
-            if (distance < 60) {
-                isGrappling = false;
-                grappleTarget = null;
-            } else {
-                double speed = 12.0; // strong pull
-                this.setX(this.getX() + (float)(dx / distance * speed));
-                this.setY(this.getY() + (float)(dy / distance * speed));
+            if (ropeLength <= 1f) {
+                releaseGrapple();
+                return;
             }
+
+            swingAcceleration = (-gravity / ropeLength) * (float) Math.sin(swingAngle);
+            if (Keyboard.isKeyDown(Key.LEFT)) swingAcceleration -= 0.002;
+            if (Keyboard.isKeyDown(Key.RIGHT)) swingAcceleration += 0.002;
+
+            swingVelocity += swingAcceleration;
+            swingVelocity *= 0.995f;
+            swingAngle += swingVelocity;
+
+            float targetCenterX = grappleTarget.x + (float) (ropeLength * Math.sin(swingAngle));
+            float targetCenterY = grappleTarget.y + (float) (ropeLength * Math.cos(swingAngle));
+            float newX = targetCenterX - getWidth() / 2f;
+            float newY = targetCenterY - getHeight() / 2f;
+
+            // Lets go if too close
+            float distToHook = (float) Math.sqrt(
+                Math.pow(grappleTarget.x - getCenterX(), 2) + Math.pow(grappleTarget.y - getCenterY(), 2)
+            );
+            if (distToHook < 18f) {
+                releaseGrapple();
+                return;
+            }
+
+            // Collision check
+            MapTile tileAtNewX = map.getTileByPosition((int) (newX + getWidth() / 2f), (int) getCenterY());
+            MapTile tileAtNewY = map.getTileByPosition((int) getCenterX(), (int) (newY + getHeight() / 2f));
+
+            boolean collided = false;
+            if (tileAtNewX != null && tileAtNewX.isSolid()) collided = true;
+            if (tileAtNewY != null && tileAtNewY.isSolid()) collided = true;
+
+            if (collided) {
+                releaseGrapple();
+                return;
+            }
+
+            setX(newX);
+            setY(newY);
         }
+    }
+
+    private void releaseGrapple() {
+        if (!isGrappling) return;
+
+        // Give player momentum when releasing
+        float impulseX = (float) (ropeLength * swingVelocity * Math.cos(swingAngle));
+        float impulseY = (float) (-ropeLength * swingVelocity * Math.sin(swingAngle));
+
+        releaseVx = impulseX;
+        releaseVy = impulseY;
+        applyingReleaseMomentum = true;
+
+        isGrappling = false;
+        grappleTarget = null;
+        ropeLength = 0f;
+        swingVelocity = 0f;
+        swingAcceleration = 0f;
     }
 
     @Override
@@ -86,15 +168,11 @@ public class Cat extends Player {
         if (isGrappling && grappleTarget != null) {
             Graphics2D g = graphicsHandler.getGraphics();
             g.setColor(Color.WHITE);
-            g.setStroke(new BasicStroke(4)); // thicker line
+            g.setStroke(new BasicStroke(3));
 
             Camera camera = map.getCamera();
-
-            // anchor line to the center of the cat’s current bounding box
             int startX = (int) (getCenterX() - camera.getX());
             int startY = (int) (getCenterY() - camera.getY());
-
-            // draw to grapple target in screen space
             int targetX = (int) (grappleTarget.x - camera.getX());
             int targetY = (int) (grappleTarget.y - camera.getY());
 
@@ -102,7 +180,6 @@ public class Cat extends Player {
         }
     }
 
-    // Find nearest solid tile between cat and mouse click
     private Point findGrappleTarget(float targetX, float targetY) {
         if (map == null) return null;
 
@@ -110,35 +187,27 @@ public class Cat extends Player {
         double dy = targetY - getCenterY();
         double distance = Math.sqrt(dx * dx + dy * dy);
 
-        int steps = Math.max(1, (int)(distance / 4)); // avoid division by zero
+        int steps = Math.max(1, (int) (distance / 4));
         double stepX = dx / steps;
         double stepY = dy / steps;
 
         for (int i = 0; i <= steps; i++) {
-            int checkX = (int)(getCenterX() + stepX * i);
-            int checkY = (int)(getCenterY() + stepY * i);
+            int checkX = (int) (getCenterX() + stepX * i);
+            int checkY = (int) (getCenterY() + stepY * i);
 
             MapTile tile = map.getTileByPosition(checkX, checkY);
             if (tile != null && tile.isSolid()) {
-                // Hook to the center of this solid tile
                 return new Point(
-                    tile.getX() + tile.getWidth() / 2,
-                    tile.getY() + tile.getHeight() / 2
+                        tile.getX() + tile.getWidth() / 2,
+                        tile.getY() + tile.getHeight() / 2
                 );
             }
         }
-        return null; // no solid tile found
+        return null;
     }
 
-    // Helper to get center X of the cat sprite
-    private float getCenterX() {
-        return this.getX() + this.getWidth() / 2f;
-    }
-
-    // Helper to get center Y of the cat sprite
-    private float getCenterY() {
-        return this.getY() + this.getHeight() / 2f;
-    }
+    private float getCenterX() { return getX() + getWidth() / 2f; }
+    private float getCenterY() { return getY() + getHeight() / 2f; }
 
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
@@ -149,7 +218,7 @@ public class Cat extends Player {
                             .withBounds(3, 3, 17, 19)
                             .build()
             });
-
+            
             put("STAND_LEFT", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(0, 0))
                             .withScale(3)
