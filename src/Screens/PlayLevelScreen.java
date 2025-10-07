@@ -7,9 +7,9 @@ import Game.ScreenCoordinator;
 import Level.Map;
 import Level.Player;
 import Level.PlayerListener;
+import Maps.SecondMap;
 import Maps.TestMap;
 import Players.Cat;
-import Utils.Point;
 
 // This class is for when the platformer game is actually being played
 public class PlayLevelScreen extends Screen implements PlayerListener {
@@ -21,6 +21,7 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
     protected LevelClearedScreen levelClearedScreen;
     protected LevelLoseScreen levelLoseScreen;
     protected boolean levelCompletedStateChangeStart;
+    private int levelCounter = 0;
 
     public PlayLevelScreen(ScreenCoordinator screenCoordinator) {
         this.screenCoordinator = screenCoordinator;
@@ -29,6 +30,21 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
     public void initialize() {
         // define/setup map
         this.map = new TestMap();
+
+        // setup player
+        this.player = new Cat(map.getPlayerStartPosition().x, map.getPlayerStartPosition().y);
+        this.player.setMap(map);
+        this.player.addListener(this);
+
+        levelClearedScreen = new LevelClearedScreen();
+        levelLoseScreen = new LevelLoseScreen(this);
+
+        this.playLevelScreenState = PlayLevelScreenState.RUNNING;
+    }
+
+    public void initialize2(){
+        //define/setup map 2
+        this.map = new SecondMap();
 
         // setup player
         this.player = new Cat(map.getPlayerStartPosition().x, map.getPlayerStartPosition().y);
@@ -58,7 +74,10 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
                     levelClearedScreen.update();
                     screenTimer--;
                     if (screenTimer == 0) {
-                        goBackToMenu();
+                        if (levelCounter == 1){
+                            initialize2();
+                        }
+                        //goBackToMenu();
                     }
                 }
                 break;
