@@ -6,6 +6,13 @@
 			"name": "MapEditor",
 			"request": "launch",
 			"mainClass": "MapEditor.MapEditor",
+			"projectName": "SER225_bde054d1"
+		},
+		{
+			"type": "java",
+			"name": "MapEditor",
+			"request": "launch",
+			"mainClass": "MapEditor.MapEditor",
 			"projectName": "SER225_4762815d"
 		},
 		{
@@ -13,7 +20,9 @@
 			"name": "Run Game",
 			"request": "launch",
 			"mainClass": "Game.Game",
-			"sourcePaths": ["${workspaceFolder}/src"],
+			"sourcePaths": [
+				"${workspaceFolder}/src"
+			],
 			"cwd": "${workspaceFolder}",
 			"args": [],
 			"noDebug": false,
