@@ -1,21 +1,19 @@
 package Maps;
 
-import Enemies.BugEnemy;
-import Enemies.DinosaurEnemy;
 import Engine.ImageLoader;
+import EnhancedMapTiles.Buzzsaw;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.HorizontalMovingPlatform;
-import EnhancedMapTiles.VerticalMovingPlatform;
 import EnhancedMapTiles.Spike;
-import EnhancedMapTiles.Buzzsaw;
-import java.util.Random;
-import Utils.Point;
+import EnhancedMapTiles.VerticalMovingPlatform;
 import GameObject.Rectangle;
 import Level.*;
 import NPCs.Walrus;
 import Tilesets.CommonTileset;
 import Utils.Direction;
+import Utils.Point;
 import java.util.ArrayList;
+import java.util.Random;
 
 // Represents a test map to be used in a level
 public class TestMap extends Map {
@@ -25,6 +23,7 @@ public class TestMap extends Map {
         this.playerStartPosition = getMapTile(2, 11).getLocation();
     }
 
+    /* Enemies if needed
     @Override
     public ArrayList<Enemy> loadEnemies() {
         ArrayList<Enemy> enemies = new ArrayList<>();
@@ -37,6 +36,7 @@ public class TestMap extends Map {
 
         return enemies;
     }
+    */
 
     @Override
     public ArrayList<EnhancedMapTile> loadEnhancedMapTiles() {

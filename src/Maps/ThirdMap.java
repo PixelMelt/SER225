@@ -1,80 +1,50 @@
 package Maps;
 
-import Enemies.BugEnemy;
-import Enemies.DinosaurEnemy;
-import Engine.ImageLoader;
+import EnhancedMapTiles.Buzzsaw;
 import EnhancedMapTiles.EndLevelBox;
-import EnhancedMapTiles.HorizontalMovingPlatform;
-import EnhancedMapTiles.VerticalMovingPlatform;
-import GameObject.Rectangle;
 import Level.*;
-import NPCs.Walrus;
 import Tilesets.CommonTileset;
-import Utils.Direction;
 import java.util.ArrayList;
 
 // Represents a test map to be used in a level
 public class ThirdMap extends Map {
 
     public ThirdMap() {
-        super("second_map.txt", new CommonTileset());
+        super("third_map.txt", new CommonTileset());
         this.playerStartPosition = getMapTile(2, 11).getLocation();
-    }
-
-    @Override
-    public ArrayList<Enemy> loadEnemies() {
-        ArrayList<Enemy> enemies = new ArrayList<>();
-
-        /*
-        BugEnemy bugEnemy = new BugEnemy(getMapTile(16, 10).getLocation().subtractY(25), Direction.LEFT);
-        enemies.add(bugEnemy);
-
-        DinosaurEnemy dinosaurEnemy = new DinosaurEnemy(getMapTile(19, 1).getLocation().addY(2), getMapTile(22, 1).getLocation().addY(2), Direction.RIGHT);
-        enemies.add(dinosaurEnemy);
-        */
-        return enemies;
-        
     }
 
     @Override
     public ArrayList<EnhancedMapTile> loadEnhancedMapTiles() {
         ArrayList<EnhancedMapTile> enhancedMapTiles = new ArrayList<>();
 
-        HorizontalMovingPlatform hmp = new HorizontalMovingPlatform(
-                ImageLoader.load("HorizontallyMovingPlatform.png"),
-                getMapTile(24, 6).getLocation(),
-                getMapTile(27, 6).getLocation(),
-                TileType.JUMP_THROUGH_PLATFORM,
-                3,
-                new Rectangle(0, 0,16,16),
-                Direction.RIGHT
-        );
-        enhancedMapTiles.add(hmp);
+        for(int i = 8; i < 10; i++){
+            Buzzsaw buzz1 = new Buzzsaw(getMapTile(i, 9).getLocation());
+            enhancedMapTiles.add(buzz1);
+        }
 
-        VerticalMovingPlatform vmp = new VerticalMovingPlatform(
-                ImageLoader.load("VerticallyMovingPlatform.png"),
-                getMapTile(28, 8).getLocation(),
-                getMapTile(28, 9).getLocation(),
-                TileType.JUMP_THROUGH_PLATFORM,
-                3,
-                new Rectangle(0, 0,16,16),
-                Direction.UP
-        );
-        enhancedMapTiles.add(vmp);
+        for(int i = 12; i < 14; i++){
+            Buzzsaw buzz3 = new Buzzsaw(getMapTile(i, 11).getLocation());
+            enhancedMapTiles.add(buzz3);
+        }
+
+        for(int i = 18; i < 20; i++){
+            Buzzsaw buzz4 = new Buzzsaw(getMapTile(i, 7).getLocation());
+            enhancedMapTiles.add(buzz4);
+        }
+
+        for(int i = 26; i < 30; i++){
+            Buzzsaw buzz7 = new Buzzsaw(getMapTile(i, 2).getLocation());
+            Buzzsaw buzz5 = new Buzzsaw(getMapTile(i, 3).getLocation());
+            Buzzsaw buzz6 = new Buzzsaw(getMapTile(i, 10).getLocation());
+            enhancedMapTiles.add(buzz5);
+            enhancedMapTiles.add(buzz6);
+            enhancedMapTiles.add(buzz7);
+        }
 
         EndLevelBox endLevelBox = new EndLevelBox(getMapTile(32, 7).getLocation());
         enhancedMapTiles.add(endLevelBox);
 
         return enhancedMapTiles;
-    }
-
-    @Override
-    public ArrayList<NPC> loadNPCs() {
-        ArrayList<NPC> npcs = new ArrayList<>();
-
-        Walrus walrus = new Walrus(getMapTile(30, 10).getLocation().subtractY(13));
-        npcs.add(walrus);
-
-        return npcs;
     }
 }

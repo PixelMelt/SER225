@@ -7,8 +7,10 @@ import Game.ScreenCoordinator;
 import Level.Map;
 import Level.Player;
 import Level.PlayerListener;
+import Maps.FourthMap;
 import Maps.SecondMap;
 import Maps.TestMap;
+import Maps.ThirdMap;
 import Players.Cat;
 
 // This class is for when the platformer game is actually being played
@@ -29,22 +31,19 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
 
     public void initialize() {
         // define/setup map
-        this.map = new TestMap();
-
-        // setup player
-        this.player = new Cat(map.getPlayerStartPosition().x, map.getPlayerStartPosition().y);
-        this.player.setMap(map);
-        this.player.addListener(this);
-
-        levelClearedScreen = new LevelClearedScreen();
-        levelLoseScreen = new LevelLoseScreen(this);
-
-        this.playLevelScreenState = PlayLevelScreenState.RUNNING;
-    }
-
-    public void initialize2(){
-        //define/setup map 2
-        this.map = new SecondMap();
+        switch (levelCounter) {
+            case 1:
+                this.map = new SecondMap();
+                break;
+            case 2:
+                this.map = new ThirdMap();
+                break;
+            case 3:
+                this.map = new FourthMap();
+                break;
+            default:
+                this.map = new TestMap();
+        }
 
         // setup player
         this.player = new Cat(map.getPlayerStartPosition().x, map.getPlayerStartPosition().y);
@@ -73,11 +72,23 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
                 } else {
                     levelClearedScreen.update();
                     screenTimer--;
-                    if (screenTimer == 0) {
-                        if (levelCounter == 1){
-                            initialize2();
+                    if (screenTimer <= 0) {
+                        levelCounter++;
+                        // checks level counter and either call new level or return to main menu
+                        switch (levelCounter) {
+                            case 1:
+                                initialize();
+                                break;
+                            case 2:
+                                initialize();
+                                break;
+                            case 3:
+                                initialize();
+                                break;
+                            default:
+                                goBackToMenu();
+                                break;
                         }
-                        //goBackToMenu();
                     }
                 }
                 break;
