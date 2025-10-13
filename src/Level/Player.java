@@ -3,10 +3,10 @@ package Level;
 import Engine.Key;
 import Engine.KeyLocker;
 import Engine.Keyboard;
-import GameObject.GameObject;
-import GameObject.SpriteSheet;
-import GameObject.ImageEffect;
 import GameObject.Frame;
+import GameObject.GameObject;
+import GameObject.ImageEffect;
+import GameObject.SpriteSheet;
 import Utils.AirGroundState;
 import Utils.Direction;
 import java.util.ArrayList;
@@ -19,7 +19,6 @@ public abstract class Player extends GameObject {
     // Constants
     private static final float CROUCH_FRICTION_MULTIPLIER = 0.8f;
     private static final float LEVEL_COMPLETE_SPEED_MULTIPLIER = 0.5f;
-    private static final float DEATH_BOUNCE_Y_VELOCITY = 10f;
 
     // Jump timing
     private static final int JUMP_BUFFER_FRAMES = 10;
@@ -77,6 +76,7 @@ public abstract class Player extends GameObject {
 
     // Flags
     protected boolean isInvincible;
+    public boolean isOnMovingPlatform;
 
     public Player(SpriteSheet spriteSheet, float x, float y, String startingAnimationName) {
         super(spriteSheet, x, y, startingAnimationName);
@@ -112,6 +112,8 @@ public abstract class Player extends GameObject {
             case LEVEL_COMPLETED -> updateLevelCompleted();
             case PLAYER_DEAD -> updatePlayerDead();
         }
+
+        isOnMovingPlatform = false;
     }
 
     private void updateRunning() {
@@ -353,8 +355,11 @@ public abstract class Player extends GameObject {
                 velocityY = 0;
                 airGroundState = AirGroundState.GROUND;
             } else {
-                playerState = PlayerState.JUMPING;
-                airGroundState = AirGroundState.AIR;
+                // Don't set to air if on a moving platform
+                if (!isOnMovingPlatform) {
+                    playerState = PlayerState.JUMPING;
+                    airGroundState = AirGroundState.AIR;
+                }
             }
         }
         else if (direction == Direction.UP) {
@@ -434,6 +439,10 @@ public abstract class Player extends GameObject {
 
     public AirGroundState getAirGroundState() {
         return airGroundState;
+    }
+
+    public void setAirGroundState(AirGroundState airGroundState) {
+        this.airGroundState = airGroundState;
     }
 
     public Direction getFacingDirection() {

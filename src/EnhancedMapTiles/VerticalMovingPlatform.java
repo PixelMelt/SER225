@@ -5,6 +5,7 @@ import Engine.GraphicsHandler;
 import GameObject.Rectangle;
 import Level.EnhancedMapTile;
 import Level.Player;
+import Level.PlayerState;
 import Level.TileType;
 import Utils.AirGroundState;
 import Utils.Direction;
@@ -38,6 +39,11 @@ public class VerticalMovingPlatform extends EnhancedMapTile {
 
     @Override
     public void update(Player player) {
+        boolean willBeRidingPlatform = touching(player) && Math.abs((player.getBounds().getY2() + 1) - getBounds().getY1()) <= 2;
+        if (willBeRidingPlatform) {
+            player.isOnMovingPlatform = true;
+        }
+
         float startBound = startLocation.y;
         float endBound = endLocation.y;
 
@@ -66,20 +72,19 @@ public class VerticalMovingPlatform extends EnhancedMapTile {
             direction = Direction.DOWN;
         }
 
+        boolean isRidingPlatform = touching(player) && Math.abs((player.getBounds().getY2() + 1) - getBounds().getY1()) <= 2;
+
+        if (isRidingPlatform) {
+            player.moveY(moveAmountY);
+        }
         // if tile type is NOT PASSABLE, if the platform is moving and hits into the player (y axis), it will push the player
-        if (tileType == TileType.NOT_PASSABLE) {
+        // Only do this if player is NOT riding on top
+        else if (tileType == TileType.NOT_PASSABLE) {
             if (intersects(player) && moveAmountY >= 0 && player.getBounds().getY1() <= getBounds().getY2()) {
                 player.moveYHandleCollision(getBounds().getY2() - player.getBounds().getY1());
             } else if (intersects(player) && moveAmountY <= 0 && player.getBounds().getY2() >= getBounds().getY1()) {
                 player.moveYHandleCollision(getBounds().getY1() - player.getBounds().getY2());
             }
-        }
-
-        // if player is on standing on top of platform, move player by the amount the platform is moving
-        // this will cause the player to "ride" with the moving platform
-        // without this code, the platform would slide right out from under the player
-        if (touching(player) && Math.abs((player.getBounds().getY2() + 1) - getBounds().getY1()) <= 2 && player.getAirGroundState() == AirGroundState.GROUND) {
-            player.moveYHandleCollision(moveAmountY);
         }
 
         super.update(player);
