@@ -5,6 +5,7 @@ import Engine.GraphicsHandler;
 import Engine.ScreenManager;
 import Utils.Colors;
 import Utils.Point;
+import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -328,65 +329,28 @@ public abstract class Map {
     }
 
     public void update(Player player) {
-        if (adjustCamera) {
-            adjustMovementY(player);
-            adjustMovementX(player);
-        }
         camera.update(player);
-    }
-
-    // based on the player's current X position (which in a level can potentially be updated each frame),
-    // adjust the player's and camera's positions accordingly in order to properly create the map "scrolling" effect
-    private void adjustMovementX(Player player) {
-        // if player goes past center screen (on the right side) and there is more map to show on the right side, push player back to center and move camera forward
-        if ((player.getCalibratedXLocation() + (player.getWidth() / 2)) > xMidPoint && camera.getEndBoundX() < endBoundX) {
-            float xMidPointDifference = xMidPoint - (player.getCalibratedXLocation() + (player.getWidth() / 2));
-            camera.moveX(-xMidPointDifference);
-
-            // if camera moved past the right edge of the map as a result from the move above, move camera back and push player forward
-            if (camera.getEndBoundX() > endBoundX) {
-                float cameraDifference = camera.getEndBoundX() - endBoundX;
-                camera.moveX(-cameraDifference);
-            }
-        }
-        // if player goes past center screen (on the left side) and there is more map to show on the left side, push player back to center and move camera backwards
-        else if ((player.getCalibratedXLocation() + (player.getWidth() / 2)) < xMidPoint && camera.getX() > startBoundX) {
-            float xMidPointDifference = xMidPoint - (player.getCalibratedXLocation() + (player.getWidth() / 2));
-            camera.moveX(-xMidPointDifference);
-
-            // if camera moved past the left edge of the map as a result from the move above, move camera back and push player backward
-            if (camera.getX() < startBoundX) {
-                float cameraDifference = startBoundX - camera.getX();
-                camera.moveX(cameraDifference);
-            }
+        if (adjustCamera) {
+            adjustCameraToFollowPlayer(player);
         }
     }
 
-    // based on the player's current Y position (which in a level can potentially be updated each frame),
-    // adjust the player's and camera's positions accordingly in order to properly create the map "scrolling" effect
-    private void adjustMovementY(Player player) {
-        // if player goes past center screen (below) and there is more map to show below, push player back to center and move camera upward
-        if ((player.getCalibratedYLocation() + (player.getHeight() / 2)) > yMidPoint && camera.getEndBoundY() < endBoundY) {
-            float yMidPointDifference = yMidPoint - (player.getCalibratedYLocation() + (player.getHeight() / 2));
-            camera.moveY(-yMidPointDifference);
+    // smoothly moves camera to follow the player with lag
+    private void adjustCameraToFollowPlayer(Player player) {
+        // Calculate the ideal camera position to center the player on screen
+        float targetCameraX = player.getX() - xMidPoint + (player.getWidth() / 2);
+        float targetCameraY = player.getY() - yMidPoint + (player.getHeight() / 2);
 
-            // if camera moved past the bottom of the map as a result from the move above, move camera upwards and push player downwards
-            if (camera.getEndBoundY() > endBoundY) {
-                float cameraDifference = camera.getEndBoundY() - endBoundY;
-                camera.moveY(-cameraDifference);
-            }
-        }
-        // if player goes past center screen (above) and there is more map to show above, push player back to center and move camera upwards
-        else if ((player.getCalibratedYLocation() + (player.getHeight() / 2)) < yMidPoint && camera.getY() > startBoundY) {
-            float yMidPointDifference = yMidPoint - (player.getCalibratedYLocation() + (player.getHeight() / 2));
-            camera.moveY(-yMidPointDifference);
+        // Calculate the camera's viewport dimensions
+        float cameraWidth = camera.getEndBoundX() - camera.getX();
+        float cameraHeight = camera.getEndBoundY() - camera.getY();
 
-            // if camera moved past the top of the map as a result from the move above, move camera downwards and push player upwards
-            if (camera.getY() < startBoundY) {
-                float cameraDifference = startBoundY - camera.getY();
-                camera.moveY(cameraDifference);
-            }
-        }
+        // Clamp X to map bounds, clamp Y only at the bottom
+        targetCameraX = Math.max(startBoundX, Math.min(targetCameraX, endBoundX - cameraWidth));
+        targetCameraY = Math.min(targetCameraY, endBoundY - cameraHeight);
+
+        // Smoothly move camera towards target position
+        camera.moveTowardsTarget(targetCameraX, targetCameraY);
     }
 
     public void reset() {
@@ -405,12 +369,15 @@ public abstract class Map {
         // Parallax factor speed vs camera
         float parallaxFactor = 0.3f;
 
+        // Offset to draw background above the level
+        int verticalOffset = 100;
+
         // Calculate offset based on camera position
         int offsetX = (int)(cameraX * parallaxFactor);
-        int offsetY = (int)(cameraY * parallaxFactor);
+        int offsetY = (int)(cameraY * parallaxFactor) + verticalOffset;
 
         // Draw rectangles every 100 units
-        int spacing = 200;
+        int spacing = 150;
         int rectSize = 40;
 
         graphicsHandler.drawFilledRectangle(0, 0, ScreenManager.getScreenWidth(), ScreenManager.getScreenHeight(), Colors.WHITE);
@@ -423,7 +390,10 @@ public abstract class Map {
 
         for (int x = startX; x < endX; x += spacing) {
             for (int y = startY; y < endY; y += spacing) {
-                graphicsHandler.drawFilledRectangleRotated(x, y, rectSize, rectSize, Colors.CORNFLOWER_BLUE, 45);
+                int gridX = (x + offsetX) / spacing;
+                int gridY = (y + offsetY) / spacing;
+                Color color = (gridX + gridY) % 2 == 0 ? Colors.OFF_CORNFLOWER_BLUE : Colors.CORNFLOWER_BLUE;
+                graphicsHandler.drawFilledRectangleRotated(x, y, rectSize, rectSize, color, 45);
             }
         }
     }

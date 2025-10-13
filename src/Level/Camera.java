@@ -4,7 +4,6 @@ import Engine.GraphicsHandler;
 import Engine.ScreenManager;
 import GameObject.GameObject;
 import GameObject.Rectangle;
-
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -30,6 +29,11 @@ public class Camera extends Rectangle {
     // determines how many tiles off screen an entity can be before it will be deemed inactive and not included in the update/draw cycles until it comes back in range
     private final int UPDATE_OFF_SCREEN_RANGE = 4;
 
+    // camera velocity and smoothing
+    private float velocityX = 0;
+    private float velocityY = 0;
+    private final float CAMERA_LERP_SPEED = 0.30f;
+
     public Camera(int startX, int startY, int tileWidth, int tileHeight, Map map) {
         super(startX, startY, ScreenManager.getScreenWidth() / tileWidth, ScreenManager.getScreenHeight() / tileHeight);
         this.map = map;
@@ -50,6 +54,21 @@ public class Camera extends Rectangle {
     public void update(Player player) {
         updateMapTiles();
         updateMapEntities(player);
+    }
+
+    // smoothly moves camera towards a target position with velocity
+    public void moveTowardsTarget(float targetX, float targetY) {
+        // calculate the difference between current and target position
+        float deltaX = targetX - this.x;
+        float deltaY = targetY - this.y;
+
+        // apply lerp to create smooth following motion
+        velocityX = deltaX * CAMERA_LERP_SPEED;
+        velocityY = deltaY * CAMERA_LERP_SPEED;
+
+        // update camera position
+        this.x += velocityX;
+        this.y += velocityY;
     }
 
     private void updateMapTiles() {
@@ -239,6 +258,14 @@ public class Camera extends Rectangle {
 
     public boolean isAtLeftOfMap() {
         return this.getX() <= 0;
+    }
+
+    public float getVelocityX() {
+        return velocityX;
+    }
+
+    public float getVelocityY() {
+        return velocityY;
     }
 
 }
