@@ -3,12 +3,14 @@ package Level;
 import Engine.Key;
 import Engine.KeyLocker;
 import Engine.Keyboard;
+import Engine.Mouse;
 import GameObject.Frame;
 import GameObject.GameObject;
 import GameObject.ImageEffect;
 import GameObject.SpriteSheet;
 import Utils.AirGroundState;
 import Utils.Direction;
+import Utils.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +80,23 @@ public abstract class Player extends GameObject {
     protected boolean isInvincible;
     public boolean isOnMovingPlatform;
 
+    // Grapple variables
+    protected boolean isGrappling = false;
+    protected Point grappleTarget;
+    protected float ropeLength;
+    protected float swingAngle;
+    protected float swingVelocity;
+    protected float swingAcceleration;
+    protected float gravity = 0.4f;
+
+    // Release momentum
+    protected boolean applyingReleaseMomentum = false;
+    protected float releaseVx = 0f;
+    protected float releaseVy = 0f;
+
+    protected final float RELEASE_DAMPING = 0.95f;
+    protected final float RELEASE_THRESHOLD = 0.3f;
+
     public Player(SpriteSheet spriteSheet, float x, float y, String startingAnimationName) {
         super(spriteSheet, x, y, startingAnimationName);
         facingDirection = Direction.RIGHT;
@@ -119,6 +138,7 @@ public abstract class Player extends GameObject {
     private void updateRunning() {
         inputState.update();
 
+        updateGrappling();
         updateJumpTimers();
         updatePhysics();
 
@@ -328,6 +348,12 @@ public abstract class Player extends GameObject {
     }
 
     protected void handlePlayerAnimation() {
+        // Handle grappling animation first
+        if (isGrappling) {
+            this.currentAnimationName = getAnimationName("GRAPPLE");
+            return;
+        }
+
         String baseAnim = STATE_ANIMATIONS.get(playerState);
 
         if (baseAnim != null) {
@@ -340,6 +366,145 @@ public abstract class Player extends GameObject {
             this.currentAnimationName = getAnimationName(velocityY < 0 ? "JUMP" : "FALL");
         }
     }
+
+    protected void updateGrappling() {
+        Camera camera = map.getCamera();
+
+        // Momentum carry
+        if (applyingReleaseMomentum) {
+            moveX(releaseVx);
+            moveY(releaseVy);
+
+            // Gradually reduce over time
+            releaseVx *= RELEASE_DAMPING;
+            releaseVy *= RELEASE_DAMPING;
+
+            if (Math.abs(releaseVx) < RELEASE_THRESHOLD && Math.abs(releaseVy) < RELEASE_THRESHOLD) {
+                applyingReleaseMomentum = false;
+            }
+        }
+
+        // Start grapple
+        if (Mouse.wasClicked()) {
+            float worldX = Mouse.getX() + camera.getX();
+            float worldY = Mouse.getY() + camera.getY();
+            Point hit = findGrappleTarget(worldX, worldY);
+            if (hit != null) {
+                grappleTarget = hit;
+                isGrappling = true;
+
+                float dx = grappleTarget.x - getCenterX();
+                float dy = grappleTarget.y - getCenterY();
+                ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
+
+                swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
+                swingVelocity = 0f;
+
+                applyingReleaseMomentum = false;
+                releaseVx = 0;
+                releaseVy = 0;
+            }
+            Mouse.resetClick();
+        }
+
+        // Cancel grapple
+        if (isGrappling && (Keyboard.isKeyDown(Key.UP) || Mouse.wasClicked())) {
+            releaseGrapple();
+        }
+
+        // Grapple physics
+        if (isGrappling && grappleTarget != null) {
+            if (ropeLength <= 1f) {
+                releaseGrapple();
+                return;
+            }
+
+            swingAcceleration = (-gravity / ropeLength) * (float) Math.sin(swingAngle);
+            if (Keyboard.isKeyDown(Key.LEFT)) swingAcceleration -= 0.002;
+            if (Keyboard.isKeyDown(Key.RIGHT)) swingAcceleration += 0.002;
+
+            swingVelocity += swingAcceleration;
+            swingVelocity *= 0.995f;
+            swingAngle += swingVelocity;
+
+            float targetCenterX = grappleTarget.x + (float) (ropeLength * Math.sin(swingAngle));
+            float targetCenterY = grappleTarget.y + (float) (ropeLength * Math.cos(swingAngle));
+            float newX = targetCenterX - getWidth() / 2f;
+            float newY = targetCenterY - getHeight() / 2f;
+
+            // Let go if too close
+            float distToHook = (float) Math.sqrt(
+                Math.pow(grappleTarget.x - getCenterX(), 2) + Math.pow(grappleTarget.y - getCenterY(), 2)
+            );
+            if (distToHook < 18f) {
+                releaseGrapple();
+                return;
+            }
+
+            // Collision check
+            MapTile tileAtNewX = map.getTileByPosition((int) (newX + getWidth() / 2f), (int) getCenterY());
+            MapTile tileAtNewY = map.getTileByPosition((int) getCenterX(), (int) (newY + getHeight() / 2f));
+
+            boolean collided = false;
+            if (tileAtNewX != null && tileAtNewX.isSolid()) collided = true;
+            if (tileAtNewY != null && tileAtNewY.isSolid()) collided = true;
+
+            if (collided) {
+                releaseGrapple();
+                return;
+            }
+
+            setX(newX);
+            setY(newY);
+        }
+    }
+
+    protected void releaseGrapple() {
+        if (!isGrappling) return;
+
+        // Give player momentum when releasing
+        float impulseX = (float) (ropeLength * swingVelocity * Math.cos(swingAngle));
+        float impulseY = (float) (-ropeLength * swingVelocity * Math.sin(swingAngle));
+
+        releaseVx = impulseX;
+        releaseVy = impulseY;
+        applyingReleaseMomentum = true;
+
+        isGrappling = false;
+        grappleTarget = null;
+        ropeLength = 0f;
+        swingVelocity = 0f;
+        swingAcceleration = 0f;
+    }
+
+    protected Point findGrappleTarget(float targetX, float targetY) {
+        if (map == null) return null;
+
+        double dx = targetX - getCenterX();
+        double dy = targetY - getCenterY();
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        int steps = Math.max(1, (int) (distance / 4));
+        double stepX = dx / steps;
+        double stepY = dy / steps;
+
+        for (int i = 0; i <= steps; i++) {
+            int checkX = (int) (getCenterX() + stepX * i);
+            int checkY = (int) (getCenterY() + stepY * i);
+
+            MapTile tile = map.getTileByPosition(checkX, checkY);
+            if (tile != null && tile.isSolid()) {
+                return new Point(
+                        tile.getX() + tile.getWidth() / 2,
+                        tile.getY() + tile.getHeight() / 2
+                );
+            }
+        }
+        return null;
+    }
+
+    protected float getCenterX() { return getX() + getWidth() / 2f; }
+    protected float getCenterY() { return getY() + getHeight() / 2f; }
 
     @Override
     public void onEndCollisionCheckX(boolean hasCollided, Direction direction, MapEntity entityCollidedWith) {
@@ -459,5 +624,13 @@ public abstract class Player extends GameObject {
 
     public void addListener(PlayerListener listener) {
         listeners.add(listener);
+    }
+
+    public boolean isGrappling() {
+        return isGrappling;
+    }
+
+    public Point getGrappleTarget() {
+        return grappleTarget;
     }
 }

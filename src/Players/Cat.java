@@ -3,40 +3,17 @@ package Players;
 import Builders.FrameBuilder;
 import Engine.GraphicsHandler;
 import Engine.ImageLoader;
-import Engine.Key;
-import Engine.Keyboard;
-import Engine.Mouse;
 import GameObject.Frame;
 import GameObject.ImageEffect;
 import GameObject.SpriteSheet;
 import Level.Camera;
-import Level.MapTile;
 import Level.Player;
 import Utils.Point;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.HashMap;
 
 public class Cat extends Player {
-
-    // Grapple variables
-    private boolean isGrappling = false;
-    private Point grappleTarget;
-    private float ropeLength;
-    private float swingAngle;
-    private float swingVelocity;
-    private float swingAcceleration;
-    private float gravity = 0.4f;
-
-    // release momentum
-    private boolean applyingReleaseMomentum = false;
-    private float releaseVx = 0f;
-    private float releaseVy = 0f;
-
-    private final float RELEASE_DAMPING = 0.95f; 
-    private final float RELEASE_THRESHOLD = 0.3f;
 
     public Cat(float x, float y) {
         super(new SpriteSheet(ImageLoader.load("Cat.png"), 24, 24), x, y, "STAND_RIGHT");
@@ -50,164 +27,69 @@ public class Cat extends Player {
     }
 
     @Override
-    public void update() {
-        super.update();
-        Camera camera = map.getCamera();
-
-        // momentum carry
-        if (applyingReleaseMomentum) {
-            moveX(releaseVx);
-            moveY(releaseVy);
-
-            // gradually reduce over time
-            releaseVx *= RELEASE_DAMPING;
-            releaseVy *= RELEASE_DAMPING;
-
-            if (Math.abs(releaseVx) < RELEASE_THRESHOLD && Math.abs(releaseVy) < RELEASE_THRESHOLD) {
-                applyingReleaseMomentum = false;
-            }
-        }
-
-        // Start grapple
-        if (Mouse.wasClicked()) {
-            float worldX = Mouse.getX() + camera.getX();
-            float worldY = Mouse.getY() + camera.getY();
-            Point hit = findGrappleTarget(worldX, worldY);
-            if (hit != null) {
-                grappleTarget = hit;
-                isGrappling = true;
-
-                float dx = grappleTarget.x - getCenterX();
-                float dy = grappleTarget.y - getCenterY();
-                ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
-
-                swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
-                swingVelocity = 0f;
-
-                applyingReleaseMomentum = false;
-                releaseVx = 0;
-                releaseVy = 0;
-            }
-            Mouse.resetClick();
-        }
-
-        // Cancel grapple
-        if (isGrappling && (Keyboard.isKeyDown(Key.UP) || Mouse.wasClicked())) {
-            releaseGrapple();
-        }
-
-        // Grapple physics
-        if (isGrappling && grappleTarget != null) {
-            if (ropeLength <= 1f) {
-                releaseGrapple();
-                return;
-            }
-
-            swingAcceleration = (-gravity / ropeLength) * (float) Math.sin(swingAngle);
-            if (Keyboard.isKeyDown(Key.LEFT)) swingAcceleration -= 0.002;
-            if (Keyboard.isKeyDown(Key.RIGHT)) swingAcceleration += 0.002;
-
-            swingVelocity += swingAcceleration;
-            swingVelocity *= 0.995f;
-            swingAngle += swingVelocity;
-
-            float targetCenterX = grappleTarget.x + (float) (ropeLength * Math.sin(swingAngle));
-            float targetCenterY = grappleTarget.y + (float) (ropeLength * Math.cos(swingAngle));
-            float newX = targetCenterX - getWidth() / 2f;
-            float newY = targetCenterY - getHeight() / 2f;
-
-            // Lets go if too close
-            float distToHook = (float) Math.sqrt(
-                Math.pow(grappleTarget.x - getCenterX(), 2) + Math.pow(grappleTarget.y - getCenterY(), 2)
-            );
-            if (distToHook < 18f) {
-                releaseGrapple();
-                return;
-            }
-
-            // Collision check
-            MapTile tileAtNewX = map.getTileByPosition((int) (newX + getWidth() / 2f), (int) getCenterY());
-            MapTile tileAtNewY = map.getTileByPosition((int) getCenterX(), (int) (newY + getHeight() / 2f));
-
-            boolean collided = false;
-            if (tileAtNewX != null && tileAtNewX.isSolid()) collided = true;
-            if (tileAtNewY != null && tileAtNewY.isSolid()) collided = true;
-
-            if (collided) {
-                releaseGrapple();
-                return;
-            }
-
-            setX(newX);
-            setY(newY);
-        }
-    }
-
-    private void releaseGrapple() {
-        if (!isGrappling) return;
-
-        // Give player momentum when releasing
-        float impulseX = (float) (ropeLength * swingVelocity * Math.cos(swingAngle));
-        float impulseY = (float) (-ropeLength * swingVelocity * Math.sin(swingAngle));
-
-        releaseVx = impulseX;
-        releaseVy = impulseY;
-        applyingReleaseMomentum = true;
-
-        isGrappling = false;
-        grappleTarget = null;
-        ropeLength = 0f;
-        swingVelocity = 0f;
-        swingAcceleration = 0f;
-    }
-
-    @Override
     public void draw(GraphicsHandler graphicsHandler) {
-        super.draw(graphicsHandler);
-
-        if (isGrappling && grappleTarget != null) {
+        // Draw neck/rope first if grappling
+        if (isGrappling() && getGrappleTarget() != null) {
+            Point grappleTarget = getGrappleTarget();
             Graphics2D g = graphicsHandler.getGraphics();
-            g.setColor(Color.WHITE);
-            g.setStroke(new BasicStroke(3));
-
             Camera camera = map.getCamera();
-            int startX = (int) (getCenterX() - camera.getX());
+
+            // Offset starting position based on facing direction
+            float startOffsetX = 0;
+            if (getFacingDirection() == Utils.Direction.LEFT) {
+                startOffsetX = -8; // Offset to the left
+            } else if (getFacingDirection() == Utils.Direction.RIGHT) {
+                startOffsetX = 8; // Offset to the right
+            }
+
+            int startX = (int) (getCenterX() + startOffsetX - camera.getX());
             int startY = (int) (getCenterY() - camera.getY());
             int targetX = (int) (grappleTarget.x - camera.getX());
             int targetY = (int) (grappleTarget.y - camera.getY());
 
-            g.drawLine(startX, startY, targetX, targetY);
-        }
-    }
+            // Calculate distance and angle
+            float dx = targetX - startX;
+            float dy = targetY - startY;
+            double distance = Math.sqrt(dx * dx + dy * dy);
+            double angle = Math.atan2(dy, dx);
 
-    private Point findGrappleTarget(float targetX, float targetY) {
-        if (map == null) return null;
+            // Draw neck.png every 50 units along the rope
+            java.awt.image.BufferedImage neckImage = ImageLoader.load("neck.png");
+            int segmentLength = 15;
+            int numSegments = (int) (distance / segmentLength);
 
-        double dx = targetX - getCenterX();
-        double dy = targetY - getCenterY();
-        double distance = Math.sqrt(dx * dx + dy * dy);
+            for (int i = 0; i < numSegments; i++) {
+                double t = (double) i / numSegments;
+                int posX = (int) (startX + dx * t);
+                int posY = (int) (startY + dy * t);
 
-        int steps = Math.max(1, (int) (distance / 4));
-        double stepX = dx / steps;
-        double stepY = dy / steps;
-
-        for (int i = 0; i <= steps; i++) {
-            int checkX = (int) (getCenterX() + stepX * i);
-            int checkY = (int) (getCenterY() + stepY * i);
-
-            MapTile tile = map.getTileByPosition(checkX, checkY);
-            if (tile != null && tile.isSolid()) {
-                return new Point(
-                        tile.getX() + tile.getWidth() / 2,
-                        tile.getY() + tile.getHeight() / 2
-                );
+                // Rotate and draw the neck image (90 degrees + rope angle, scaled 5x)
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.translate(posX, posY);
+                g2d.rotate(angle + Math.PI / 2);
+                int scaledWidth = neckImage.getWidth() * 3;
+                int scaledHeight = neckImage.getHeight() * 3;
+                g2d.drawImage(neckImage, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight, null);
+                g2d.dispose();
             }
-        }
-        return null;
-    }
 
-    private float getCenterX() { return getX() + getWidth() / 2f; }
-    private float getCenterY() { return getY() + getHeight() / 2f; }
+            // Draw head.png at the end (grapple target), offset by 3 scaled pixels (rotated 90deg right)
+            java.awt.image.BufferedImage headImage = ImageLoader.load("head.png");
+            int offsetPixels = -5; // 3 pixels * 3 scale = 9 pixels
+            int offsetX = (int) (targetX - Math.cos(angle + Math.PI / 2) * offsetPixels);
+            int offsetY = (int) (targetY - Math.sin(angle + Math.PI / 2) * offsetPixels);
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.translate(offsetX, offsetY);
+            g2d.rotate(angle + Math.PI / 2);
+            int headWidth = headImage.getWidth() * 3;
+            int headHeight = headImage.getHeight() * 3;
+            g2d.drawImage(headImage, -headWidth / 2, -headHeight / 2, headWidth, headHeight, null);
+            g2d.dispose();
+        }
+
+        // Draw player sprite on top
+        super.draw(graphicsHandler);
+    }
 
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
@@ -350,6 +232,21 @@ public class Cat extends Player {
 
             put("SWIM_STAND_LEFT", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(6, 0))
+                            .withScale(3)
+                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
+                            .withBounds(3, 3, 17, 19)
+                            .build()
+            });
+
+            put("GRAPPLE_RIGHT", new Frame[] {
+                    new FrameBuilder(spriteSheet.getSprite(5, 0))
+                            .withScale(3)
+                            .withBounds(3, 3, 17, 19)
+                            .build()
+            });
+
+            put("GRAPPLE_LEFT", new Frame[] {
+                    new FrameBuilder(spriteSheet.getSprite(5, 0))
                             .withScale(3)
                             .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
                             .withBounds(3, 3, 17, 19)
