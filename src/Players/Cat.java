@@ -34,12 +34,14 @@ public class Cat extends Player {
             Graphics2D g = graphicsHandler.getGraphics();
             Camera camera = map.getCamera();
 
+            boolean isLeft = getFacingDirection() == Utils.Direction.LEFT;
+
             // Offset starting position based on facing direction
             float startOffsetX = 0;
             if (getFacingDirection() == Utils.Direction.LEFT) {
-                startOffsetX = -8; // Offset to the left
+                startOffsetX = -8;
             } else if (getFacingDirection() == Utils.Direction.RIGHT) {
-                startOffsetX = 8; // Offset to the right
+                startOffsetX = 8;
             }
 
             int startX = (int) (getCenterX() + startOffsetX - camera.getX());
@@ -47,13 +49,12 @@ public class Cat extends Player {
             int targetX = (int) (grappleTarget.x - camera.getX());
             int targetY = (int) (grappleTarget.y - camera.getY());
 
-            // Calculate distance and angle
             float dx = targetX - startX;
             float dy = targetY - startY;
             double distance = Math.sqrt(dx * dx + dy * dy);
             double angle = Math.atan2(dy, dx);
 
-            // Draw neck.png every 50 units along the rope
+            // Draw neck.png along the rope
             java.awt.image.BufferedImage neckImage = ImageLoader.load("neck.png");
             int segmentLength = 15;
             int numSegments = (int) (distance / segmentLength);
@@ -63,7 +64,7 @@ public class Cat extends Player {
                 int posX = (int) (startX + dx * t);
                 int posY = (int) (startY + dy * t);
 
-                // Rotate and draw the neck image (90 degrees + rope angle, scaled 5x)
+                // Rotate and scale the neck image
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.translate(posX, posY);
                 g2d.rotate(angle + Math.PI / 2);
@@ -73,14 +74,22 @@ public class Cat extends Player {
                 g2d.dispose();
             }
 
-            // Draw head.png at the end (grapple target), offset by 3 scaled pixels (rotated 90deg right)
+            // Draw head at the end of the rope
             java.awt.image.BufferedImage headImage = ImageLoader.load("head.png");
-            int offsetPixels = -5; // 3 pixels * 3 scale = 9 pixels
+            int offsetPixels = isLeft ? 5 : -5;
             int offsetX = (int) (targetX - Math.cos(angle + Math.PI / 2) * offsetPixels);
             int offsetY = (int) (targetY - Math.sin(angle + Math.PI / 2) * offsetPixels);
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.translate(offsetX, offsetY);
-            g2d.rotate(angle + Math.PI / 2);
+
+            // Adjust rotation and flip based on facing direction
+            if (isLeft) {
+                g2d.rotate(angle - Math.PI / 2);
+                g2d.scale(1, -1);
+            } else {
+                g2d.rotate(angle + Math.PI / 2);
+            }
+
             int headWidth = headImage.getWidth() * 3;
             int headHeight = headImage.getHeight() * 3;
             g2d.drawImage(headImage, -headWidth / 2, -headHeight / 2, headWidth, headHeight, null);

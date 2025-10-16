@@ -109,6 +109,13 @@ public class MapCollisionHandler {
                 case NOT_PASSABLE:
                     return gameObject.intersects(mapTile);
                 case JUMP_THROUGH_PLATFORM:
+                    // Allow falling through if player is pressing down
+                    if (gameObject instanceof Player) {
+                        Player player = (Player) gameObject;
+                        if (player.wantsFallThroughPlatform()) {
+                            return false;
+                        }
+                    }
                     return direction == Direction.DOWN && gameObject.intersects(mapTile) &&
                             Math.round(gameObject.getBounds().getY2()) == Math.round(mapTile.getBounds().getY1());
                 case WATER:

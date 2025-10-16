@@ -79,6 +79,7 @@ public abstract class Player extends GameObject {
     // Flags
     protected boolean isInvincible;
     public boolean isOnMovingPlatform;
+    protected boolean wantsFallThroughPlatform;
 
     // Grapple variables
     protected boolean isGrappling = false;
@@ -137,6 +138,9 @@ public abstract class Player extends GameObject {
 
     private void updateRunning() {
         inputState.update();
+
+        // Set fall through platform flag when crouching on ground
+        wantsFallThroughPlatform = inputState.crouch && airGroundState == AirGroundState.GROUND;
 
         updateGrappling();
         updateJumpTimers();
@@ -632,5 +636,9 @@ public abstract class Player extends GameObject {
 
     public Point getGrappleTarget() {
         return grappleTarget;
+    }
+
+    public boolean wantsFallThroughPlatform() {
+        return wantsFallThroughPlatform;
     }
 }
