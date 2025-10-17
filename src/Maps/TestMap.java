@@ -11,9 +11,7 @@ import Level.*;
 import NPCs.Walrus;
 import Tilesets.CommonTileset;
 import Utils.Direction;
-import Utils.Point;
 import java.util.ArrayList;
-import java.util.Random;
 
 // Represents a test map to be used in a level
 public class TestMap extends Map {
@@ -44,8 +42,8 @@ public class TestMap extends Map {
 
         HorizontalMovingPlatform hmp = new HorizontalMovingPlatform(
                 ImageLoader.load("HorizontallyMovingPlatform.png"),
-                getMapTile(24, 6).getLocation(),
-                getMapTile(27, 6).getLocation(),
+                getMapTile(26, 15).getLocation(),
+                getMapTile(29, 15).getLocation(),
                 TileType.JUMP_THROUGH_PLATFORM,
                 3,
                 new Rectangle(0, 0,16,16),
@@ -55,8 +53,8 @@ public class TestMap extends Map {
 
         VerticalMovingPlatform vmp = new VerticalMovingPlatform(
                 ImageLoader.load("VerticallyMovingPlatform.png"),
-                getMapTile(28, 8).getLocation(),
-                getMapTile(28, 9).getLocation(),
+                getMapTile(26, 9).getLocation(),
+                getMapTile(26, 12).getLocation(),
                 TileType.JUMP_THROUGH_PLATFORM,
                 3,
                 new Rectangle(0, 0,16,16),
@@ -64,116 +62,77 @@ public class TestMap extends Map {
         );
         enhancedMapTiles.add(vmp);
 
-        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(32, 7).getLocation());
+        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(52, 12).getLocation());
         enhancedMapTiles.add(endLevelBox);
 
-    // add spikes randomly across the map
-        Random rnd = new Random();
-        int placed = 0;
-        int attempts = 0;
-    int desired = 5; // total spikes
-    int spawnAvoidX = 2;
-    int spawnAvoidY = 11;
-    int spawnAvoidRadius = 5; // reduce spawn avoidance radius
-    int groundDesired = Math.min(2, desired); // guaranteed ground spikes
-    int placedGround = 0;
-    int groundAttempts = 0;
-    int minSeparation = 4; // min tile distance between hazards
-    while (placedGround < groundDesired && groundAttempts < desired * 50) {
-        groundAttempts++;
-        int xg = rnd.nextInt(getWidth());
-        int yg = rnd.nextInt(getHeight());
-        // avoid spawn area
-        if (Math.abs(xg - spawnAvoidX) <= spawnAvoidRadius && Math.abs(yg - spawnAvoidY) <= spawnAvoidRadius) continue;
-        MapTile tileG = getMapTile(xg, yg);
-        if (tileG == null) continue;
-        if (tileG.getTileType() != TileType.PASSABLE) continue;
-        // require solid ground below
-        if (yg + 1 >= getHeight()) continue;
-        MapTile belowG = getMapTile(xg, yg + 1);
-        if (belowG == null || belowG.getTileType() != TileType.NOT_PASSABLE) continue;
-
-        boolean occupiedG = false;
-        for (EnhancedMapTile emt : enhancedMapTiles) {
-            Point idx = getTileIndexByPosition(emt.getX(), emt.getY());
-            // exact occupancy check
-            if (Math.round(idx.x) == xg && Math.round(idx.y) == yg) { occupiedG = true; break; }
-            // separation check to avoid clumping
-            double dx = idx.x - xg;
-            double dy = idx.y - yg;
-            if (Math.sqrt(dx * dx + dy * dy) < minSeparation) { occupiedG = true; break; }
-        }
-    if (occupiedG) continue;
-
-    // place ground spike
-    Spike spikeG = new Spike(tileG.getLocation(), false);
-    enhancedMapTiles.add(spikeG);
-    placedGround++;
-    placed++;
-    }
-    // place spikes
-    while (placed < desired && attempts < desired * 100) {
-            attempts++;
-            int x = rnd.nextInt(getWidth());
-            int y = rnd.nextInt(getHeight());
-            // avoid spawn area
-            if (Math.abs(x - spawnAvoidX) <= spawnAvoidRadius && Math.abs(y - spawnAvoidY) <= spawnAvoidRadius) continue;
-            MapTile tile = getMapTile(x, y);
-            if (tile == null) continue;
-            if (tile.getTileType() != TileType.PASSABLE) continue;
-
-            boolean occupied = false;
-            for (EnhancedMapTile emt : enhancedMapTiles) {
-                Point idx = getTileIndexByPosition(emt.getX(), emt.getY());
-                // exact occupancy to avoid overlap of spikes
-                if (Math.round(idx.x) == x && Math.round(idx.y) == y) { occupied = true; break; }
-                double dx = idx.x - x;
-                double dy = idx.y - y;
-                if (Math.sqrt(dx * dx + dy * dy) < minSeparation) { occupied = true; break; }
+        // place a row of ground spikes
+        for (int i = 4; i < 18; i++) {
+            MapTile t = getMapTile(i, 17);
+            if (t != null && t.getTileType() == TileType.PASSABLE) {
+                Spike s = new Spike(t.getLocation(), false);
+                enhancedMapTiles.add(s);
             }
-            if (occupied) continue;
-
-            // determine if spike is floating, if floating, flip
-            boolean floating = true;
-            if (y + 1 < getHeight()) {
-                MapTile below = getMapTile(x, y + 1);
-                if (below != null && below.getTileType() == TileType.NOT_PASSABLE) {
-                    floating = false;
-                }
-            }
-            Spike spike = new Spike(tile.getLocation(), floating);
-            enhancedMapTiles.add(spike);
-            placed++;
         }
 
-    // place buzzsaws 
-        int buzzPlaced = 0;
-        int buzzDesired = 2;
-        int buzzAttempts = 0;
-        while (buzzPlaced < buzzDesired && buzzAttempts < 200) {
-            buzzAttempts++;
-            int bx = rnd.nextInt(getWidth());
-            int by = rnd.nextInt(getHeight());
-            if (Math.abs(bx - spawnAvoidX) <= spawnAvoidRadius && Math.abs(by - spawnAvoidY) <= spawnAvoidRadius) continue;
-            MapTile bt = getMapTile(bx, by);
-            if (bt == null) continue;
-            if (bt.getTileType() != TileType.PASSABLE) continue;
-
-            boolean occupiedB = false;
-            for (EnhancedMapTile emt : enhancedMapTiles) {
-                Point idx = getTileIndexByPosition(emt.getX(), emt.getY());
-                if (Math.round(idx.x) == bx && Math.round(idx.y) == by) { occupiedB = true; break; }
-                double dx = idx.x - bx;
-                double dy = idx.y - by;
-                if (Math.sqrt(dx * dx + dy * dy) < minSeparation) { occupiedB = true; break; }
+    // place a few floating spikes
+    int[][] floatingSpikes = {{22, 11}, {12, 14}, {39, 10},{40, 10}};
+        for (int[] fs : floatingSpikes) {
+            MapTile t = getMapTile(fs[0], fs[1]);
+            if (t != null && t.getTileType() == TileType.PASSABLE) {
+                Spike s = new Spike(t.getLocation(), true);
+                enhancedMapTiles.add(s);
             }
-            if (occupiedB) continue;
-
-            Buzzsaw buzz = new Buzzsaw(bt.getLocation());
-            enhancedMapTiles.add(buzz);
-            buzzPlaced++;
         }
 
+        // place buzzsaws at visible positions
+        MapTile buzz1 = getMapTile(20, 10);
+        if (buzz1 != null && buzz1.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz1.getLocation()));
+        }
+        MapTile buzz2 = getMapTile(27, 5);
+        if (buzz2 != null && buzz2.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz2.getLocation()));
+        }
+        MapTile buzz3 = getMapTile(12, 12);
+        if (buzz3 != null && buzz3.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz3.getLocation()));
+        }
+        MapTile buzz4 = getMapTile(14, 9);
+        if (buzz4 != null && buzz4.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz4.getLocation()));
+        }
+        MapTile buzz5 = getMapTile(45, 11);
+        if (buzz5 != null && buzz5.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz5.getLocation()));
+        }
+        MapTile buzz6 = getMapTile(45, 12);
+        if (buzz6 != null && buzz6.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz6.getLocation()));
+        }
+        MapTile buzz7= getMapTile(45, 13);
+        if (buzz7 != null && buzz7.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz7.getLocation()));
+        }
+        MapTile buzz8 = getMapTile(45, 14);
+        if (buzz8 != null && buzz8.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz8.getLocation()));
+        }
+        MapTile buzz9 = getMapTile(47, 11);
+        if (buzz9 != null && buzz9.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz9.getLocation()));
+        }
+        MapTile buzz10 = getMapTile(47, 12);
+        if (buzz10 != null && buzz10.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz10.getLocation()));
+        }
+        MapTile buzz11 = getMapTile(47, 13);
+        if (buzz11 != null && buzz11.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz11.getLocation()));
+        }
+        MapTile buzz12 = getMapTile(47, 14);
+        if (buzz12 != null && buzz12.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz12.getLocation()));
+        }
         return enhancedMapTiles;
     }
 
@@ -181,7 +140,7 @@ public class TestMap extends Map {
     public ArrayList<NPC> loadNPCs() {
         ArrayList<NPC> npcs = new ArrayList<>();
 
-        Walrus walrus = new Walrus(getMapTile(30, 10).getLocation().subtractY(13));
+        Walrus walrus = new Walrus(getMapTile(28, 18).getLocation().subtractY(13));
         npcs.add(walrus);
 
         return npcs;

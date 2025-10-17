@@ -175,6 +175,13 @@ public abstract class Player extends GameObject {
         handlePlayerAnimation();
         updateLockedKeys();
         super.update();
+        // if player falls below the bottom of the map, player dies
+        if (map != null) {
+            float centerY = getY() + getHeight() / 2f;
+            if (centerY >= map.getHeightPixels()) {
+                levelState = LevelState.PLAYER_DEAD;
+            }
+        }
     }
 
     private void updateJumpTimers() {
