@@ -17,7 +17,7 @@ public class Duck extends NPC {
         super(location.x, location.y, new SpriteSheet(ImageLoader.load("Duck.png"), 24, 24), "Stare");
         isInteractable = true;
         talkedToTime = 200;
-        textbox.setText("What do you call a goose detective? Sherlock Honks");
+        textbox.setText("What do you call a goose detective? \nSherlock Honks");
         textboxOffsetX = -4;
         textboxOffsetY = -34;
     }

@@ -18,7 +18,7 @@ public class Umbrella extends NPC {
         super(location.x, location.y, new SpriteSheet(ImageLoader.load("Umbrella.png"), 24, 24), "Open");
         isInteractable = true;
         talkedToTime = 200;
-        textbox.setText("What do you call a well-dressed goose? Fashion-fowl.");
+        textbox.setText("What do you call a well-dressed goose? \nFashion-fowl.");
         textboxOffsetX = -4;
         textboxOffsetY = -34;
     }

@@ -19,7 +19,7 @@ public class Walrus extends NPC {
         super(location.x, location.y, new SpriteSheet(ImageLoader.load("Walrus.png"), 24, 24), "TAIL_DOWN");
         isInteractable = true;
         talkedToTime = 200;
-        textbox.setText("What's a goose's favorite snack? Quackers!");
+        textbox.setText("What's a goose's favorite snack? \nQuackers!");
         textboxOffsetX = -4;
         textboxOffsetY = -34;
     }

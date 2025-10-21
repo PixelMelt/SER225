@@ -18,7 +18,7 @@ public class BreadPC extends NPC {
         super(location.x, location.y, new SpriteSheet(ImageLoader.load("BreadPC.png"), 24, 24), "Smile");
         isInteractable = true;
         talkedToTime = 200;
-        textbox.setText("Why? WHY?? WHYYY??? WOuld you eat me?");
+        textbox.setText("Why? WHY?? WHYYY??? \nWOuld you eat me?");
         textboxOffsetX = -4;
         textboxOffsetY = -34;
     }
