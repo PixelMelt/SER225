@@ -9,27 +9,26 @@ import GameObject.SpriteSheet;
 import Level.NPC;
 import Level.Player;
 import Utils.Point;
-
 import java.util.HashMap;
 
-// This class is for the walrus NPC
-public class Walrus extends NPC {
+// This class is for the BREADPC
+public class BreadPC extends NPC {
 
-    public Walrus(Point location) {
-        super(location.x, location.y, new SpriteSheet(ImageLoader.load("Walrus.png"), 24, 24), "TAIL_DOWN");
+    public BreadPC(Point location) {
+        super(location.x, location.y, new SpriteSheet(ImageLoader.load("BreadPC.png"), 24, 24), "Smile");
         isInteractable = true;
         talkedToTime = 200;
-        textbox.setText("What's a goose's favorite snack? Quackers!");
+        textbox.setText("Why? WHY?? WHYYY??? WOuld you eat me?");
         textboxOffsetX = -4;
         textboxOffsetY = -34;
     }
 
     public void update(Player player) {
-        // while npc is being talked to, it raises its tail up (in excitement?)
+        // while npc is being talked to, it frowns
         if (talkedTo) {
-            currentAnimationName = "TAIL_UP";
+            currentAnimationName = "Frown";
         } else {
-            currentAnimationName = "TAIL_DOWN";
+            currentAnimationName = "Smile";
         }
 
         super.update(player);
@@ -38,15 +37,15 @@ public class Walrus extends NPC {
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
         return new HashMap<String, Frame[]>() {{
-           put("TAIL_DOWN", new Frame[] {
+           put("Smile", new Frame[] {
                    new FrameBuilder(spriteSheet.getSprite(0, 0))
-                           .withScale(3)
+                           .withScale(4)
                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
                            .build()
            });
-            put("TAIL_UP", new Frame[] {
+            put("Frown", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(1, 0))
-                            .withScale(3)
+                            .withScale(4)
                             .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
                             .build()
             });
@@ -58,3 +57,4 @@ public class Walrus extends NPC {
         super.draw(graphicsHandler);
     }
 }
+

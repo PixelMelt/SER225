@@ -4,32 +4,30 @@ import Builders.FrameBuilder;
 import Engine.GraphicsHandler;
 import Engine.ImageLoader;
 import GameObject.Frame;
-import GameObject.ImageEffect;
 import GameObject.SpriteSheet;
 import Level.NPC;
 import Level.Player;
 import Utils.Point;
-
 import java.util.HashMap;
 
-// This class is for the walrus NPC
-public class Walrus extends NPC {
+// This class is for the BREADPC
+public class Duck extends NPC {
 
-    public Walrus(Point location) {
-        super(location.x, location.y, new SpriteSheet(ImageLoader.load("Walrus.png"), 24, 24), "TAIL_DOWN");
+    public Duck(Point location) {
+        super(location.x, location.y, new SpriteSheet(ImageLoader.load("Duck.png"), 24, 24), "Stare");
         isInteractable = true;
         talkedToTime = 200;
-        textbox.setText("What's a goose's favorite snack? Quackers!");
+        textbox.setText("What do you call a goose detective? Sherlock Honks");
         textboxOffsetX = -4;
         textboxOffsetY = -34;
     }
 
     public void update(Player player) {
-        // while npc is being talked to, it raises its tail up (in excitement?)
+        // while npc is being talked to, it frowns
         if (talkedTo) {
-            currentAnimationName = "TAIL_UP";
+            currentAnimationName = "EyeRoll";
         } else {
-            currentAnimationName = "TAIL_DOWN";
+            currentAnimationName = "Stare";
         }
 
         super.update(player);
@@ -38,16 +36,14 @@ public class Walrus extends NPC {
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
         return new HashMap<String, Frame[]>() {{
-           put("TAIL_DOWN", new Frame[] {
+           put("Stare", new Frame[] {
                    new FrameBuilder(spriteSheet.getSprite(0, 0))
-                           .withScale(3)
-                           .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
+                           .withScale(4)
                            .build()
            });
-            put("TAIL_UP", new Frame[] {
+            put("EyeRoll", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(1, 0))
-                            .withScale(3)
-                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
+                            .withScale(4)
                             .build()
             });
         }};

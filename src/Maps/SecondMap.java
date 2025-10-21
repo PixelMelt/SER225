@@ -8,6 +8,7 @@ import EnhancedMapTiles.Spike;
 import EnhancedMapTiles.VerticalMovingPlatform;
 import GameObject.Rectangle;
 import Level.*;
+import NPCs.Umbrella;
 import Tilesets.CommonTileset;
 import Utils.Direction;
 import java.util.ArrayList;
@@ -170,5 +171,17 @@ public class SecondMap extends Map {
 
         return enhancedMapTiles;
     }
+
+    
+    @Override
+    public ArrayList<NPC> loadNPCs() {
+        ArrayList<NPC> npcs = new ArrayList<>();
+
+        Umbrella umbre = new Umbrella(getMapTile(95, 16).getLocation().subtractY(45));
+        npcs.add(umbre);
+
+        return npcs;
+    }
+    
 
 }
