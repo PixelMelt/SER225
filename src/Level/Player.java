@@ -25,6 +25,7 @@ public abstract class Player extends GameObject {
     // Jump timing
     private static final int JUMP_BUFFER_FRAMES = 10;
     private static final int COYOTE_TIME_FRAMES = 7;
+    private static final float JUMP_RELEASE_MULTIPLIER = 0.9f;
 
     // Animation mappings
     private static final Map<PlayerState, String> STATE_ANIMATIONS = Map.of(
@@ -54,6 +55,7 @@ public abstract class Player extends GameObject {
     private int jumpBufferTimer = 0;
     private int coyoteTimeTimer = 0;
     private boolean jumpedIntoAir = false;
+    private boolean isHoldingJump = false;
 
     // State tracking
     protected PlayerState playerState;
@@ -192,6 +194,9 @@ public abstract class Player extends GameObject {
             coyoteTimeTimer--;
         }
 
+        // Track whether jump key is currently held
+        isHoldingJump = inputState.jump;
+
         if (inputState.jump && !keyLocker.isKeyLocked(JUMP_KEY)) {
             jumpBufferTimer = JUMP_BUFFER_FRAMES;
             keyLocker.lockKey(JUMP_KEY);
@@ -205,6 +210,10 @@ public abstract class Player extends GameObject {
     }
 
     protected void applyGravity() {
+        // Apply jump canceling: if player releases jump while moving upward, cut velocity
+        if (velocityY < 0 && !isHoldingJump && jumpedIntoAir) {
+            velocityY *= JUMP_RELEASE_MULTIPLIER;
+        }
         velocityY += gravityAcceleration;
     }
 
@@ -252,6 +261,7 @@ public abstract class Player extends GameObject {
         velocityY = -jumpVelocity;
         airGroundState = AirGroundState.AIR;
         jumpedIntoAir = true;
+        isHoldingJump = true;
         jumpBufferTimer = 0;
         coyoteTimeTimer = 0;
         playerState = PlayerState.JUMPING;
