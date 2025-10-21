@@ -124,10 +124,13 @@ public class ThirdMap extends Map {
         }
 
         for(int i = 48; i < 60; i++){
-            for(int j = 10; j < 12; j++){
-                Buzzsaw buzz1 = new Buzzsaw(getMapTile(i, j).getLocation());
-                enhancedMapTiles.add(buzz1);
-            }
+            Buzzsaw buzz1 = new Buzzsaw(getMapTile(i, 10).getLocation());
+            enhancedMapTiles.add(buzz1);
+        }
+
+        for(int i = 48; i < 57; i++){
+            Buzzsaw buzz1 = new Buzzsaw(getMapTile(i, 11).getLocation());
+            enhancedMapTiles.add(buzz1);
         }
 
         for(int i = 48; i < 55; i++){
