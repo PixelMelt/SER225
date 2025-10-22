@@ -75,6 +75,10 @@ public abstract class Player extends GameObject {
     protected Key MOVE_RIGHT_KEY = Key.RIGHT;
     protected Key CROUCH_KEY = Key.DOWN;
 
+    protected Key NODE_KEY = Key.X;
+    protected static final int NODE_TILE_INDEX = 3; // tile index of your node
+    protected static final float NODE_RADIUS = 1000f;  // how close you must be (pixels) to press X and attach
+
     // Input state
     private final InputState inputState = new InputState();
 
@@ -354,6 +358,10 @@ public abstract class Player extends GameObject {
         if (Keyboard.isKeyUp(JUMP_KEY)) {
             keyLocker.unlockKey(JUMP_KEY);
         }
+        // NODE-GRAPPLE: unlock X key
+        if (Keyboard.isKeyUp(NODE_KEY)) {
+            keyLocker.unlockKey(NODE_KEY);
+        }
     }
 
     // Helper method for animation names
@@ -405,7 +413,16 @@ public abstract class Player extends GameObject {
             }
         }
 
-        // Start grapple
+        // NODE-GRAPPLE: press X near a node tile to attach
+        if (!isGrappling && !keyLocker.isKeyLocked(NODE_KEY) && Keyboard.isKeyDown(NODE_KEY)) {
+            Point anchor = findNearestNodeAnchor(getCenterX(), getCenterY(), NODE_RADIUS);
+            if (anchor != null) {
+                activateGrappleAt(anchor);
+                keyLocker.lockKey(NODE_KEY);
+            }
+        }
+
+        // Start grapple by mouse click (kept as-is)
         if (Mouse.wasClicked()) {
             float worldX = Mouse.getX() + camera.getX();
             float worldY = Mouse.getY() + camera.getY();
@@ -479,6 +496,46 @@ public abstract class Player extends GameObject {
             setY(newY);
         }
     }
+    
+    // allow tiles to start a grapple at a specific world anchor point
+    public void activateGrappleAt(Utils.Point anchor) {
+        if (anchor == null || map == null) return;
+
+        this.grappleTarget = anchor;
+        this.isGrappling = true;
+
+        float dx = grappleTarget.x - getCenterX();
+        float dy = grappleTarget.y - getCenterY();
+        this.ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
+
+        this.swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
+        this.swingVelocity = 0f;
+
+        this.applyingReleaseMomentum = false;
+        this.releaseVx = 0f;
+        this.releaseVy = 0f;
+    }
+
+    public void activateGrapple(float targetX, float targetY) {
+        if (isGrappling) return;
+
+        grappleTarget = new Point(targetX, targetY);
+        isGrappling = true;
+
+        float dx = grappleTarget.x - getCenterX();
+        float dy = grappleTarget.y - getCenterY();
+        ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
+
+        swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
+        swingVelocity = 0f;
+        swingAcceleration = 0f;
+
+        applyingReleaseMomentum = false;
+        releaseVx = 0;
+        releaseVy = 0;
+
+        System.out.println("Grapple activated at: (" + targetX + ", " + targetY + ")");
+    }
 
     protected void releaseGrapple() {
         if (!isGrappling) return;
@@ -519,6 +576,39 @@ public abstract class Player extends GameObject {
                         tile.getX() + tile.getWidth() / 2,
                         tile.getY() + tile.getHeight() / 2
                 );
+            }
+        }
+        return null;
+    }
+
+    // finds center of a nearby tile 
+    private Point findNearestNodeAnchor(float px, float py, float maxRadiusPx) {
+        if (map == null) return null;
+
+        // get the player's tile index
+        Point idx = map.getTileIndexByPosition(px, py);
+        int cx = Math.round(idx.x);
+        int cy = Math.round(idx.y);
+
+        // scans (3 tiles in each direction)
+        for (int dy = -3; dy <= 3; dy++) {
+            for (int dx = -3; dx <= 3; dx++) {
+                int tx = cx + dx;
+                int ty = cy + dy;
+                MapTile tile = map.getMapTile(tx, ty);
+                if (tile == null) continue;
+
+                // check tile index match
+                if (tile.getTileIndex() == NODE_TILE_INDEX) {
+                    float ax = tile.getX() + tile.getWidth() / 2f;
+                    float ay = tile.getY() + tile.getHeight() / 2f;
+                    float ddx = ax - px;
+                    float ddy = ay - py;
+                    float dist = (float)Math.sqrt(ddx * ddx + ddy * ddy);
+                    if (dist <= maxRadiusPx) {
+                        return new Point(ax, ay);
+                    }
+                }
             }
         }
         return null;

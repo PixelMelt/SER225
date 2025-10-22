@@ -46,7 +46,7 @@ public class TestMap extends Map {
                 getMapTile(29, 15).getLocation(),
                 TileType.JUMP_THROUGH_PLATFORM,
                 3,
-                new Rectangle(0, 0,16,16),
+                new Rectangle(0, 0, 16, 16),
                 Direction.RIGHT
         );
         enhancedMapTiles.add(hmp);
@@ -57,7 +57,7 @@ public class TestMap extends Map {
                 getMapTile(26, 12).getLocation(),
                 TileType.JUMP_THROUGH_PLATFORM,
                 3,
-                new Rectangle(0, 0,16,16),
+                new Rectangle(0, 0, 16, 16),
                 Direction.UP
         );
         enhancedMapTiles.add(vmp);
@@ -74,8 +74,8 @@ public class TestMap extends Map {
             }
         }
 
-    // place a few floating spikes
-    int[][] floatingSpikes = {{22, 11}, {12, 14}, {39, 10},{40, 10}};
+        // place a few floating spikes
+        int[][] floatingSpikes = {{22, 11}, {12, 14}, {39, 10}, {40, 10}};
         for (int[] fs : floatingSpikes) {
             MapTile t = getMapTile(fs[0], fs[1]);
             if (t != null && t.getTileType() == TileType.PASSABLE) {
@@ -109,7 +109,7 @@ public class TestMap extends Map {
         if (buzz6 != null && buzz6.getTileType() == TileType.PASSABLE) {
             enhancedMapTiles.add(new Buzzsaw(buzz6.getLocation()));
         }
-        MapTile buzz7= getMapTile(45, 13);
+        MapTile buzz7 = getMapTile(45, 13);
         if (buzz7 != null && buzz7.getTileType() == TileType.PASSABLE) {
             enhancedMapTiles.add(new Buzzsaw(buzz7.getLocation()));
         }

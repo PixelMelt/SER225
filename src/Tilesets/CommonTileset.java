@@ -51,12 +51,12 @@ public class CommonTileset extends Tileset {
 
         mapTiles.add(dirtTile);
 
-        // sun
+        // sun node (placeholder)
         Frame[] sunFrames = new Frame[]{
-                new FrameBuilder(getSubImage(2, 0), 50)
+                new FrameBuilder(getSubImage(2, 0))
                         .withScale(tileScale)
                         .build(),
-                new FrameBuilder(getSubImage(2, 1), 50)
+                new FrameBuilder(getSubImage(2, 1))
                         .withScale(tileScale)
                         .build()
         };
