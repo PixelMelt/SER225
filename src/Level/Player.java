@@ -3,7 +3,6 @@ package Level;
 import Engine.Key;
 import Engine.KeyLocker;
 import Engine.Keyboard;
-import Engine.Mouse;
 import GameObject.Frame;
 import GameObject.GameObject;
 import GameObject.ImageEffect;
@@ -397,8 +396,6 @@ public abstract class Player extends GameObject {
     }
 
     protected void updateGrappling() {
-        Camera camera = map.getCamera();
-
         // Momentum carry
         if (applyingReleaseMomentum) {
             moveX(releaseVx);
@@ -413,41 +410,28 @@ public abstract class Player extends GameObject {
             }
         }
 
-        // NODE-GRAPPLE: press X near a node tile to attach
+        // NODE-GRAPPLE: press X near a node tile to attach using raycasting
         if (!isGrappling && !keyLocker.isKeyLocked(NODE_KEY) && Keyboard.isKeyDown(NODE_KEY)) {
-            Point anchor = findNearestNodeAnchor(getCenterX(), getCenterY(), NODE_RADIUS);
+            Point anchor = findNearestNodeAnchorWithRaycast(getCenterX(), getCenterY(), NODE_RADIUS);
             if (anchor != null) {
                 activateGrappleAt(anchor);
                 keyLocker.lockKey(NODE_KEY);
             }
         }
 
-        // Start grapple by mouse click (kept as-is)
-        if (Mouse.wasClicked()) {
-            float worldX = Mouse.getX() + camera.getX();
-            float worldY = Mouse.getY() + camera.getY();
-            Point hit = findGrappleTarget(worldX, worldY);
-            if (hit != null) {
-                grappleTarget = hit;
-                isGrappling = true;
-
-                float dx = grappleTarget.x - getCenterX();
-                float dy = grappleTarget.y - getCenterY();
-                ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
-
-                swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
-                swingVelocity = 0f;
-
-                applyingReleaseMomentum = false;
-                releaseVx = 0;
-                releaseVy = 0;
-            }
-            Mouse.resetClick();
+        // Cancel grapple with jump (UP key)
+        if (isGrappling && Keyboard.isKeyDown(Key.UP) && !keyLocker.isKeyLocked(JUMP_KEY)) {
+            releaseGrappleWithJump();
+            keyLocker.lockKey(JUMP_KEY);
         }
 
-        // Cancel grapple
-        if (isGrappling && (Keyboard.isKeyDown(Key.UP) || Mouse.wasClicked())) {
+        // Cancel grapple and drop (DOWN or X key)
+        if (isGrappling && (Keyboard.isKeyDown(Key.DOWN) ||
+            (Keyboard.isKeyDown(NODE_KEY) && !keyLocker.isKeyLocked(NODE_KEY)))) {
             releaseGrapple();
+            if (Keyboard.isKeyDown(NODE_KEY)) {
+                keyLocker.lockKey(NODE_KEY);
+            }
         }
 
         // Grapple physics
@@ -516,102 +500,127 @@ public abstract class Player extends GameObject {
         this.releaseVy = 0f;
     }
 
-    public void activateGrapple(float targetX, float targetY) {
-        if (isGrappling) return;
-
-        grappleTarget = new Point(targetX, targetY);
-        isGrappling = true;
-
-        float dx = grappleTarget.x - getCenterX();
-        float dy = grappleTarget.y - getCenterY();
-        ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
-
-        swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
-        swingVelocity = 0f;
-        swingAcceleration = 0f;
-
-        applyingReleaseMomentum = false;
-        releaseVx = 0;
-        releaseVy = 0;
-
-        System.out.println("Grapple activated at: (" + targetX + ", " + targetY + ")");
-    }
 
     protected void releaseGrapple() {
+        releaseGrappleInternal(false);
+    }
+
+    protected void releaseGrappleWithJump() {
+        releaseGrappleInternal(true);
+    }
+
+    private void releaseGrappleInternal(boolean shouldJump) {
         if (!isGrappling) return;
 
-        // Give player momentum when releasing
-        float impulseX = (float) (ropeLength * swingVelocity * Math.cos(swingAngle));
-        float impulseY = (float) (-ropeLength * swingVelocity * Math.sin(swingAngle));
-
-        releaseVx = impulseX;
-        releaseVy = impulseY;
-        applyingReleaseMomentum = true;
-
+        // Clear grapple state
         isGrappling = false;
         grappleTarget = null;
         ropeLength = 0f;
+        float savedSwingVelocity = swingVelocity;
+        float savedSwingAngle = swingAngle;
+        float savedRopeLength = ropeLength;
         swingVelocity = 0f;
         swingAcceleration = 0f;
-    }
 
-    protected Point findGrappleTarget(float targetX, float targetY) {
-        if (map == null) return null;
+        if (shouldJump) {
+            // Stop any release momentum and execute a jump
+            applyingReleaseMomentum = false;
+            releaseVx = 0;
+            releaseVy = 0;
+            executeJump();
+        } else {
+            // Give player momentum when releasing
+            float impulseX = (float) (savedRopeLength * savedSwingVelocity * Math.cos(savedSwingAngle));
+            float impulseY = (float) (-savedRopeLength * savedSwingVelocity * Math.sin(savedSwingAngle));
 
-        double dx = targetX - getCenterX();
-        double dy = targetY - getCenterY();
-        double distance = Math.sqrt(dx * dx + dy * dy);
-
-        int steps = Math.max(1, (int) (distance / 4));
-        double stepX = dx / steps;
-        double stepY = dy / steps;
-
-        for (int i = 0; i <= steps; i++) {
-            int checkX = (int) (getCenterX() + stepX * i);
-            int checkY = (int) (getCenterY() + stepY * i);
-
-            MapTile tile = map.getTileByPosition(checkX, checkY);
-            if (tile != null && tile.isSolid()) {
-                return new Point(
-                        tile.getX() + tile.getWidth() / 2,
-                        tile.getY() + tile.getHeight() / 2
-                );
-            }
+            releaseVx = impulseX;
+            releaseVy = impulseY;
+            applyingReleaseMomentum = true;
         }
-        return null;
     }
 
-    // finds center of a nearby tile 
-    private Point findNearestNodeAnchor(float px, float py, float maxRadiusPx) {
+    // finds closest node tile using raycasting to the nearest N nodes
+    private Point findNearestNodeAnchorWithRaycast(float px, float py, float maxRadiusPx) {
         if (map == null) return null;
 
-        // get the player's tile index
+        // find all nearby node tiles within radius
+        List<Point> nearbyNodes = new ArrayList<>();
+
         Point idx = map.getTileIndexByPosition(px, py);
         int cx = Math.round(idx.x);
         int cy = Math.round(idx.y);
 
-        // scans (3 tiles in each direction)
-        for (int dy = -3; dy <= 3; dy++) {
-            for (int dx = -3; dx <= 3; dx++) {
+        // search in a reasonable grid area (convert radius to tiles)
+        int searchRadius = (int) Math.ceil(maxRadiusPx / map.getTileset().getScaledSpriteWidth()) + 1;
+
+        for (int dy = -searchRadius; dy <= searchRadius; dy++) {
+            for (int dx = -searchRadius; dx <= searchRadius; dx++) {
                 int tx = cx + dx;
                 int ty = cy + dy;
                 MapTile tile = map.getMapTile(tx, ty);
                 if (tile == null) continue;
 
-                // check tile index match
                 if (tile.getTileIndex() == NODE_TILE_INDEX) {
                     float ax = tile.getX() + tile.getWidth() / 2f;
                     float ay = tile.getY() + tile.getHeight() / 2f;
                     float ddx = ax - px;
                     float ddy = ay - py;
                     float dist = (float)Math.sqrt(ddx * ddx + ddy * ddy);
+
                     if (dist <= maxRadiusPx) {
-                        return new Point(ax, ay);
+                        nearbyNodes.add(new Point(ax, ay));
                     }
                 }
             }
         }
+
+        if (nearbyNodes.isEmpty()) {
+            return null;
+        }
+
+        // sort nodes by distance
+        nearbyNodes.sort((a, b) -> {
+            float distA = (float)Math.sqrt(Math.pow(a.x - px, 2) + Math.pow(a.y - py, 2));
+            float distB = (float)Math.sqrt(Math.pow(b.x - px, 2) + Math.pow(b.y - py, 2));
+            return Float.compare(distA, distB);
+        });
+
+        // raycast to each node in order until we find one with clear line of sight
+        // check up to 10 nearest nodes
+        int maxNodesToCheck = Math.min(10, nearbyNodes.size());
+        for (int i = 0; i < maxNodesToCheck; i++) {
+            Point node = nearbyNodes.get(i);
+            if (hasLineOfSight(px, py, node.x, node.y)) {
+                return node;
+            }
+        }
+
         return null;
+    }
+
+    // raycast from player to target to check for obstacles
+    private boolean hasLineOfSight(float fromX, float fromY, float toX, float toY) {
+        float dx = toX - fromX;
+        float dy = toY - fromY;
+        float distance = (float)Math.sqrt(dx * dx + dy * dy);
+
+        // Check every 4 pixels
+        int steps = Math.max(1, (int)(distance / 4));
+        float stepX = dx / steps;
+        float stepY = dy / steps;
+
+        // start at 1 to skip player position
+        for (int i = 1; i < steps; i++) {
+            int checkX = (int)(fromX + stepX * i);
+            int checkY = (int)(fromY + stepY * i);
+
+            MapTile tile = map.getTileByPosition(checkX, checkY);
+            if (tile != null && tile.isSolid()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected float getCenterX() { return getX() + getWidth() / 2f; }
