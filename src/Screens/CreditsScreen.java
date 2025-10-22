@@ -16,6 +16,8 @@ public class CreditsScreen extends Screen {
     protected KeyLocker keyLocker = new KeyLocker();
     protected SpriteFont creditsLabel;
     protected SpriteFont createdByLabel;
+    protected SpriteFont teamBeesLabel;
+    protected SpriteFont alexLabel;
     protected SpriteFont returnInstructionsLabel;
 
     public CreditsScreen(ScreenCoordinator screenCoordinator) {
@@ -28,7 +30,9 @@ public class CreditsScreen extends Screen {
         background = new TitleScreenMap();
         background.setAdjustCamera(false);
         creditsLabel = new SpriteFont("Credits", 15, 7, "Times New Roman", 30, Color.black);
-        createdByLabel = new SpriteFont("Created by Team Bees™ and Alex Thimineur™", 130, 121, "Times New Roman", 20, Color.black);
+        createdByLabel = new SpriteFont("Created By:", 500, 81, "Times New Roman", 20, Color.black);
+        teamBeesLabel = new SpriteFont("TeamBees™", 500, 131, "Times New Roman", 20, Color.black);
+        alexLabel = new SpriteFont("Alex Thimineur™", 500, 161, "Times New Roman", 20, Color.black);
         returnInstructionsLabel = new SpriteFont("Press Space to return to the menu", 20, 532, "Times New Roman", 30, Color.white);
         keyLocker.lockKey(Key.SPACE);
     }
@@ -50,6 +54,8 @@ public class CreditsScreen extends Screen {
         background.draw(graphicsHandler);
         creditsLabel.draw(graphicsHandler);
         createdByLabel.draw(graphicsHandler);
+        teamBeesLabel.draw(graphicsHandler);
+        alexLabel.draw(graphicsHandler);
         returnInstructionsLabel.draw(graphicsHandler);
     }
 }
