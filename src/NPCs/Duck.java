@@ -16,15 +16,28 @@ public class Duck extends NPC {
     public Duck(Point location) {
         super(location.x, location.y, new SpriteSheet(ImageLoader.load("Duck.png"), 24, 24), "Stare");
         isInteractable = true;
-        talkedToTime = 200;
-        textbox.setText("What do you call a goose detective? \nSherlock Honks");
-        textboxOffsetX = -4;
-        textboxOffsetY = -34;
+
+        // Get portrait frames
+        Frame npcPortrait = getPortraitFrame();
+        SpriteSheet playerSheet = new SpriteSheet(ImageLoader.load("Cat.png"), 24, 24);
+        Frame playerPortrait = new Builders.FrameBuilder(playerSheet.getSprite(0, 0))
+                .withScale(3)
+                .withBounds(3, 3, 17, 19)
+                .build();
+
+        // Setup dialogue sequence
+        dialogueSequence = new Level.DialogueSequence();
+        dialogueSequence.addMessage("What do you call a goose detective?", npcPortrait);
+        dialogueSequence.addMessage("Hmm... no idea.", playerPortrait);
+        dialogueSequence.addMessage("Sherlock Honks!", npcPortrait);
+        dialogueSequence.addMessage("You know im not sure why I exptected\nbetter then that.", playerPortrait);
+        dialogueSequence.addMessage("You try coming up with a coherant\ngoose joke then.", npcPortrait);
+        dialogueSequence.addMessage("Fair enough.", playerPortrait);
     }
 
     public void update(Player player) {
-        // while npc is being talked to, it frowns
-        if (talkedTo) {
+        // while npc is being talked to, it does an eye roll
+        if (isInDialogue) {
             currentAnimationName = "EyeRoll";
         } else {
             currentAnimationName = "Stare";

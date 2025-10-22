@@ -18,15 +18,29 @@ public class Walrus extends NPC {
     public Walrus(Point location) {
         super(location.x, location.y, new SpriteSheet(ImageLoader.load("Walrus.png"), 24, 24), "TAIL_DOWN");
         isInteractable = true;
-        talkedToTime = 200;
-        textbox.setText("What's a goose's favorite snack? \nQuackers!");
-        textboxOffsetX = -4;
-        textboxOffsetY = -34;
+
+        // Get portrait frames
+        Frame npcPortrait = getPortraitFrame();
+        SpriteSheet playerSheet = new SpriteSheet(ImageLoader.load("Cat.png"), 24, 24);
+        Frame playerPortrait = new Builders.FrameBuilder(playerSheet.getSprite(0, 0))
+                .withScale(3)
+                .withBounds(3, 3, 17, 19)
+                .build();
+
+        // Setup dialogue sequence
+        dialogueSequence = new Level.DialogueSequence();
+        dialogueSequence.addMessage("Psst! Come here!", npcPortrait);
+        dialogueSequence.addMessage("What's up?", playerPortrait);
+        dialogueSequence.addMessage("What's a goose's favorite snack?", npcPortrait);
+        dialogueSequence.addMessage("I don't know...", playerPortrait);
+        dialogueSequence.addMessage("Quackers!", npcPortrait);
+        dialogueSequence.addMessage("Ha! That's actually pretty good!", playerPortrait);
+        dialogueSequence.addMessage("I'm getting really good at these!\n*wiggles tail excitedly*", npcPortrait);
     }
 
     public void update(Player player) {
         // while npc is being talked to, it raises its tail up (in excitement?)
-        if (talkedTo) {
+        if (isInDialogue) {
             currentAnimationName = "TAIL_UP";
         } else {
             currentAnimationName = "TAIL_DOWN";

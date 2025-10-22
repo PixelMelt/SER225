@@ -17,15 +17,26 @@ public class BreadPC extends NPC {
     public BreadPC(Point location) {
         super(location.x, location.y, new SpriteSheet(ImageLoader.load("BreadPC.png"), 24, 24), "Smile");
         isInteractable = true;
-        talkedToTime = 200;
-        textbox.setText("Why? WHY?? WHYYY??? \nWOuld you eat me?");
-        textboxOffsetX = -4;
-        textboxOffsetY = -34;
+
+        // Get portrait frames
+        Frame npcPortrait = getPortraitFrame();
+        SpriteSheet playerSheet = new SpriteSheet(ImageLoader.load("Cat.png"), 24, 24);
+        Frame playerPortrait = new Builders.FrameBuilder(playerSheet.getSprite(0, 0))
+                .withScale(3)
+                .withBounds(3, 3, 17, 19)
+                .build();
+
+        // Setup dialogue sequence
+        dialogueSequence = new Level.DialogueSequence();
+        dialogueSequence.addMessage("Oh! Hello there!", npcPortrait);
+        dialogueSequence.addMessage("Hey there.", playerPortrait);
+        dialogueSequence.addMessage("Why? WHY?? WHYYY???\nwHy WOuld you eat me?", npcPortrait);
+        dialogueSequence.addMessage("Yummers.", playerPortrait);
     }
 
     public void update(Player player) {
         // while npc is being talked to, it frowns
-        if (talkedTo) {
+        if (isInDialogue) {
             currentAnimationName = "Frown";
         } else {
             currentAnimationName = "Smile";

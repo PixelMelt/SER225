@@ -105,6 +105,13 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
             case RUNNING:
                 map.draw(graphicsHandler);
                 player.draw(graphicsHandler);
+
+                // draw dialogue boxes on top of everything
+                for (Level.NPC npc : map.getActiveNPCs()) {
+                    if (npc.hasActiveDialogue()) {
+                        npc.drawDialogueBox(graphicsHandler);
+                    }
+                }
                 break;
             case LEVEL_COMPLETED:
                 levelClearedScreen.draw(graphicsHandler);
