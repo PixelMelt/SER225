@@ -20,7 +20,8 @@ public class Cat extends Player {
         gravityAcceleration = 0.5f;
         maxFallSpeed = 8f;
         jumpVelocity = 15f;
-        maxHorizontalSpeed = 6f;
+        maxRunSpeed = 6f;
+        maxPhysicsSpeed = 18f; // Allow grapple swings to go 3x faster than running
         horizontalAcceleration = 1f;
         groundFriction = 0.6f;
         airFriction = 0.5f;

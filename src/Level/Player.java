@@ -34,7 +34,8 @@ public abstract class Player extends GameObject {
     );
 
     // Physics constants, these should be set in a subclass
-    protected float maxHorizontalSpeed;
+    protected float maxRunSpeed;
+    protected float maxPhysicsSpeed;
     protected float horizontalAcceleration;
     protected float groundFriction;
     protected float airFriction;
@@ -236,8 +237,9 @@ public abstract class Player extends GameObject {
 
     // Clamp velocities to their max values
     private void clampVelocities() {
-        if (Math.abs(velocityX) > maxHorizontalSpeed) {
-            velocityX = Math.signum(velocityX) * maxHorizontalSpeed;
+        // Use physics cap as absolute safety limit (much higher than run speed)
+        if (Math.abs(velocityX) > maxPhysicsSpeed) {
+            velocityX = Math.signum(velocityX) * maxPhysicsSpeed;
         }
         if (velocityY > maxFallSpeed) {
             velocityY = maxFallSpeed;
@@ -284,12 +286,18 @@ public abstract class Player extends GameObject {
     private void applyMovementInput() {
         if (inputState.moveLeft) {
             facingDirection = Direction.LEFT;
-            float acceleration = (velocityX > 0) ? horizontalAcceleration * 3.5f : horizontalAcceleration;
-            velocityX -= acceleration;
+            // Only apply acceleration if we're under the run speed limit or moving in opposite direction
+            if (velocityX > -maxRunSpeed) {
+                float acceleration = (velocityX > 0) ? horizontalAcceleration * 3.5f : horizontalAcceleration;
+                velocityX -= acceleration;
+            }
         } else if (inputState.moveRight) {
             facingDirection = Direction.RIGHT;
-            float acceleration = (velocityX < 0) ? horizontalAcceleration * 3.5f : horizontalAcceleration;
-            velocityX += acceleration;
+            // Only apply acceleration if we're under the run speed limit or moving in opposite direction
+            if (velocityX < maxRunSpeed) {
+                float acceleration = (velocityX < 0) ? horizontalAcceleration * 3.5f : horizontalAcceleration;
+                velocityX += acceleration;
+            }
         }
     }
 
@@ -493,7 +501,16 @@ public abstract class Player extends GameObject {
         this.ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
 
         this.swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
-        this.swingVelocity = 0f;
+
+        // Convert linear velocity into angular velocity around the grapple point
+        // Calculate tangential component: velocity perpendicular to rope direction
+        float tangentialVelocity = (velocityX * -dy + velocityY * dx) / ropeLength;
+        // Convert tangential velocity to angular velocity
+        this.swingVelocity = tangentialVelocity / ropeLength;
+
+        // Zero out linear velocities since we're now in pendulum mode
+        this.velocityX = 0f;
+        this.velocityY = 0f;
 
         this.applyingReleaseMomentum = false;
         this.releaseVx = 0f;
@@ -512,27 +529,43 @@ public abstract class Player extends GameObject {
     private void releaseGrappleInternal(boolean shouldJump) {
         if (!isGrappling) return;
 
+        // Save values BEFORE clearing state
+        float savedSwingVelocity = swingVelocity;
+        float savedSwingAngle = swingAngle;
+        float savedRopeLength = ropeLength;
+
         // Clear grapple state
         isGrappling = false;
         grappleTarget = null;
         ropeLength = 0f;
-        float savedSwingVelocity = swingVelocity;
-        float savedSwingAngle = swingAngle;
-        float savedRopeLength = ropeLength;
         swingVelocity = 0f;
         swingAcceleration = 0f;
 
+        // Calculate momentum impulse
+        float impulseX = (float) (savedRopeLength * savedSwingVelocity * Math.cos(savedSwingAngle));
+        float impulseY = (float) (-savedRopeLength * savedSwingVelocity * Math.sin(savedSwingAngle));
+
+        // Amplify momentum for better feel (adjust multiplier to taste)
+        float momentumMultiplier = 1.5f;
+        impulseX *= momentumMultiplier;
+        impulseY *= momentumMultiplier;
+
         if (shouldJump) {
-            // Stop any release momentum and execute a jump
+            // Add swing momentum to jump velocity instead of discarding it
+            velocityX = impulseX;
+            velocityY = -jumpVelocity + (impulseY * 0.5f); // Add partial upward momentum to jump
+            airGroundState = AirGroundState.AIR;
+            jumpedIntoAir = true;
+            isHoldingJump = true;
+            jumpBufferTimer = 0;
+            coyoteTimeTimer = 0;
+            playerState = PlayerState.JUMPING;
+            currentAnimationName = getAnimationName("JUMP");
+
+            // Don't use release momentum system since we're using normal velocity
             applyingReleaseMomentum = false;
-            releaseVx = 0;
-            releaseVy = 0;
-            executeJump();
         } else {
             // Give player momentum when releasing
-            float impulseX = (float) (savedRopeLength * savedSwingVelocity * Math.cos(savedSwingAngle));
-            float impulseY = (float) (-savedRopeLength * savedSwingVelocity * Math.sin(savedSwingAngle));
-
             releaseVx = impulseX;
             releaseVy = impulseY;
             applyingReleaseMomentum = true;
@@ -676,7 +709,7 @@ public abstract class Player extends GameObject {
         }
         else if (map.getCamera().containsDraw(this)) {
             currentAnimationName = "WALK_RIGHT";
-            velocityX = maxHorizontalSpeed * LEVEL_COMPLETE_SPEED_MULTIPLIER;
+            velocityX = maxRunSpeed * LEVEL_COMPLETE_SPEED_MULTIPLIER;
             super.update();
             moveXHandleCollision(velocityX);
         } else {
