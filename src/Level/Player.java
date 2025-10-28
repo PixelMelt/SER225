@@ -96,6 +96,18 @@ public abstract class Player extends GameObject {
     protected float swingAcceleration;
     protected float gravity = 0.4f;
 
+    // Grapple animation state
+    protected enum GrappleAnimationState {
+        NONE,
+        EXTENDING,
+        ATTACHED,
+        RETRACTING
+    }
+    protected GrappleAnimationState grappleAnimationState = GrappleAnimationState.NONE;
+    protected int grappleAnimationFrame = 0;
+    protected static final int GRAPPLE_ANIMATION_MAX_FRAMES = 8;
+    protected Point pendingGrappleTarget = null;
+
     // Release momentum
     protected boolean applyingReleaseMomentum = false;
     protected float releaseVx = 0f;
@@ -129,6 +141,7 @@ public abstract class Player extends GameObject {
         }
     }
 
+    @Override
     public void update() {
         moveAmountX = 0;
         moveAmountY = 0;
@@ -384,17 +397,27 @@ public abstract class Player extends GameObject {
     }
 
     protected void handlePlayerAnimation() {
-        // Handle grappling animation first
-        if (isGrappling) {
-            this.currentAnimationName = getAnimationName("GRAPPLE");
-            return;
+        switch (grappleAnimationState) {
+            case EXTENDING -> {
+                this.currentAnimationName = getAnimationName("GRAPPLE_EXTEND");
+                return;
+            }
+            case ATTACHED -> {
+                this.currentAnimationName = getAnimationName("GRAPPLE");
+                return;
+            }
+            case RETRACTING -> {
+                this.currentAnimationName = getAnimationName("GRAPPLE_RETRACT");
+                return;
+            }
+            case NONE -> {
+            }
         }
 
         String baseAnim = STATE_ANIMATIONS.get(playerState);
 
         if (baseAnim != null) {
             this.currentAnimationName = getAnimationName(baseAnim);
-            // Special case for water when standing
             if (playerState == PlayerState.STANDING && isInWater()) {
                 this.currentAnimationName = getAnimationName("SWIM_STAND");
             }
@@ -404,12 +427,37 @@ public abstract class Player extends GameObject {
     }
 
     protected void updateGrappling() {
-        // Momentum carry
+        switch (grappleAnimationState) {
+            case EXTENDING -> {
+                grappleAnimationFrame++;
+                if (grappleAnimationFrame >= GRAPPLE_ANIMATION_MAX_FRAMES) {
+                    activateGrappleAt(pendingGrappleTarget);
+                    grappleAnimationState = GrappleAnimationState.ATTACHED;
+                    grappleAnimationFrame = 0;
+                }
+            }
+
+            case RETRACTING -> {
+                grappleAnimationFrame--;
+                if (grappleAnimationFrame <= 0) {
+                    completeGrappleRelease();
+                    grappleAnimationState = GrappleAnimationState.NONE;
+                    grappleAnimationFrame = 0;
+                    pendingGrappleTarget = null;
+                }
+            }
+
+            case ATTACHED -> {
+            }
+
+            case NONE -> {
+            }
+        }
+
         if (applyingReleaseMomentum) {
             moveX(releaseVx);
             moveY(releaseVy);
 
-            // Gradually reduce over time
             releaseVx *= RELEASE_DAMPING;
             releaseVy *= RELEASE_DAMPING;
 
@@ -418,22 +466,19 @@ public abstract class Player extends GameObject {
             }
         }
 
-        // NODE-GRAPPLE: press X near a node tile to attach using raycasting
-        if (!isGrappling && !keyLocker.isKeyLocked(NODE_KEY) && Keyboard.isKeyDown(NODE_KEY)) {
+        if (grappleAnimationState == GrappleAnimationState.NONE && !keyLocker.isKeyLocked(NODE_KEY) && Keyboard.isKeyDown(NODE_KEY)) {
             Point anchor = findNearestNodeAnchorWithRaycast(getCenterX(), getCenterY(), NODE_RADIUS);
             if (anchor != null) {
-                activateGrappleAt(anchor);
+                startGrappleExtension(anchor);
                 keyLocker.lockKey(NODE_KEY);
             }
         }
 
-        // Cancel grapple with jump (UP key)
         if (isGrappling && Keyboard.isKeyDown(Key.UP) && !keyLocker.isKeyLocked(JUMP_KEY)) {
             releaseGrappleWithJump();
             keyLocker.lockKey(JUMP_KEY);
         }
 
-        // Cancel grapple and drop (DOWN or X key)
         if (isGrappling && (Keyboard.isKeyDown(Key.DOWN) ||
             (Keyboard.isKeyDown(NODE_KEY) && !keyLocker.isKeyLocked(NODE_KEY)))) {
             releaseGrapple();
@@ -442,7 +487,6 @@ public abstract class Player extends GameObject {
             }
         }
 
-        // Grapple physics
         if (isGrappling && grappleTarget != null) {
             if (ropeLength <= 1f) {
                 releaseGrapple();
@@ -462,7 +506,6 @@ public abstract class Player extends GameObject {
             float newX = targetCenterX - getWidth() / 2f;
             float newY = targetCenterY - getHeight() / 2f;
 
-            // Let go if too close
             float distToHook = (float) Math.sqrt(
                 Math.pow(grappleTarget.x - getCenterX(), 2) + Math.pow(grappleTarget.y - getCenterY(), 2)
             );
@@ -471,7 +514,6 @@ public abstract class Player extends GameObject {
                 return;
             }
 
-            // Collision check
             MapTile tileAtNewX = map.getTileByPosition((int) (newX + getWidth() / 2f), (int) getCenterY());
             MapTile tileAtNewY = map.getTileByPosition((int) getCenterX(), (int) (newY + getHeight() / 2f));
 
@@ -488,9 +530,14 @@ public abstract class Player extends GameObject {
             setY(newY);
         }
     }
-    
-    // allow tiles to start a grapple at a specific world anchor point
-    public void activateGrappleAt(Utils.Point anchor) {
+
+    protected void startGrappleExtension(Point anchor) {
+        this.pendingGrappleTarget = anchor;
+        this.grappleAnimationState = GrappleAnimationState.EXTENDING;
+        this.grappleAnimationFrame = 0;
+    }
+
+    public void activateGrappleAt(Point anchor) {
         if (anchor == null || map == null) return;
 
         this.grappleTarget = anchor;
@@ -502,13 +549,9 @@ public abstract class Player extends GameObject {
 
         this.swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
 
-        // Convert linear velocity into angular velocity around the grapple point
-        // Calculate tangential component: velocity perpendicular to rope direction
         float tangentialVelocity = (velocityX * -dy + velocityY * dx) / ropeLength;
-        // Convert tangential velocity to angular velocity
         this.swingVelocity = tangentialVelocity / ropeLength;
 
-        // Zero out linear velocities since we're now in pendulum mode
         this.velocityX = 0f;
         this.velocityY = 0f;
 
@@ -516,7 +559,6 @@ public abstract class Player extends GameObject {
         this.releaseVx = 0f;
         this.releaseVy = 0f;
     }
-
 
     protected void releaseGrapple() {
         releaseGrappleInternal(false);
@@ -527,33 +569,32 @@ public abstract class Player extends GameObject {
     }
 
     private void releaseGrappleInternal(boolean shouldJump) {
-        if (!isGrappling) return;
+        if (grappleAnimationState == GrappleAnimationState.NONE || grappleAnimationState == GrappleAnimationState.RETRACTING) {
+            return;
+        }
 
-        // Save values BEFORE clearing state
+        if (grappleAnimationState == GrappleAnimationState.EXTENDING) {
+            grappleAnimationState = GrappleAnimationState.RETRACTING;
+            return;
+        }
+
         float savedSwingVelocity = swingVelocity;
         float savedSwingAngle = swingAngle;
         float savedRopeLength = ropeLength;
 
-        // Clear grapple state
-        isGrappling = false;
-        grappleTarget = null;
-        ropeLength = 0f;
-        swingVelocity = 0f;
-        swingAcceleration = 0f;
-
-        // Calculate momentum impulse
         float impulseX = (float) (savedRopeLength * savedSwingVelocity * Math.cos(savedSwingAngle));
         float impulseY = (float) (-savedRopeLength * savedSwingVelocity * Math.sin(savedSwingAngle));
 
-        // Amplify momentum for better feel (adjust multiplier to taste)
         float momentumMultiplier = 1.5f;
         impulseX *= momentumMultiplier;
         impulseY *= momentumMultiplier;
 
+        grappleAnimationState = GrappleAnimationState.RETRACTING;
+        grappleAnimationFrame = GRAPPLE_ANIMATION_MAX_FRAMES;
+
         if (shouldJump) {
-            // Add swing momentum to jump velocity instead of discarding it
             velocityX = impulseX;
-            velocityY = -jumpVelocity + (impulseY * 0.5f); // Add partial upward momentum to jump
+            velocityY = -jumpVelocity + (impulseY * 0.5f);
             airGroundState = AirGroundState.AIR;
             jumpedIntoAir = true;
             isHoldingJump = true;
@@ -562,28 +603,34 @@ public abstract class Player extends GameObject {
             playerState = PlayerState.JUMPING;
             currentAnimationName = getAnimationName("JUMP");
 
-            // Don't use release momentum system since we're using normal velocity
             applyingReleaseMomentum = false;
         } else {
-            // Give player momentum when releasing
             releaseVx = impulseX;
             releaseVy = impulseY;
+        }
+    }
+
+    private void completeGrappleRelease() {
+        isGrappling = false;
+        grappleTarget = null;
+        ropeLength = 0f;
+        swingVelocity = 0f;
+        swingAcceleration = 0f;
+
+        if (releaseVx != 0 || releaseVy != 0) {
             applyingReleaseMomentum = true;
         }
     }
 
-    // finds closest node tile using raycasting to the nearest N nodes
     private Point findNearestNodeAnchorWithRaycast(float px, float py, float maxRadiusPx) {
         if (map == null) return null;
 
-        // find all nearby node tiles within radius
         List<Point> nearbyNodes = new ArrayList<>();
 
         Point idx = map.getTileIndexByPosition(px, py);
         int cx = Math.round(idx.x);
         int cy = Math.round(idx.y);
 
-        // search in a reasonable grid area (convert radius to tiles)
         int searchRadius = (int) Math.ceil(maxRadiusPx / map.getTileset().getScaledSpriteWidth()) + 1;
 
         for (int dy = -searchRadius; dy <= searchRadius; dy++) {
@@ -611,15 +658,12 @@ public abstract class Player extends GameObject {
             return null;
         }
 
-        // sort nodes by distance
         nearbyNodes.sort((a, b) -> {
             float distA = (float)Math.sqrt(Math.pow(a.x - px, 2) + Math.pow(a.y - py, 2));
             float distB = (float)Math.sqrt(Math.pow(b.x - px, 2) + Math.pow(b.y - py, 2));
             return Float.compare(distA, distB);
         });
 
-        // raycast to each node in order until we find one with clear line of sight
-        // check up to 10 nearest nodes
         int maxNodesToCheck = Math.min(10, nearbyNodes.size());
         for (int i = 0; i < maxNodesToCheck; i++) {
             Point node = nearbyNodes.get(i);
@@ -631,18 +675,15 @@ public abstract class Player extends GameObject {
         return null;
     }
 
-    // raycast from player to target to check for obstacles
     private boolean hasLineOfSight(float fromX, float fromY, float toX, float toY) {
         float dx = toX - fromX;
         float dy = toY - fromY;
         float distance = (float)Math.sqrt(dx * dx + dy * dy);
 
-        // Check every 4 pixels
         int steps = Math.max(1, (int)(distance / 4));
         float stepX = dx / steps;
         float stepY = dy / steps;
 
-        // start at 1 to skip player position
         for (int i = 1; i < steps; i++) {
             int checkX = (int)(fromX + stepX * i);
             int checkY = (int)(fromY + stepY * i);
@@ -789,5 +830,20 @@ public abstract class Player extends GameObject {
 
     public boolean wantsFallThroughPlatform() {
         return wantsFallThroughPlatform;
+    }
+
+    public GrappleAnimationState getGrappleAnimationState() {
+        return grappleAnimationState;
+    }
+
+    public float getGrappleExtensionProgress() {
+        if (grappleAnimationState == GrappleAnimationState.NONE) {
+            return 0.0f;
+        }
+        return (float) grappleAnimationFrame / (float) GRAPPLE_ANIMATION_MAX_FRAMES;
+    }
+
+    public Point getPendingGrappleTarget() {
+        return pendingGrappleTarget;
     }
 }

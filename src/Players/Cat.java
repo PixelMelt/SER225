@@ -29,9 +29,30 @@ public class Cat extends Player {
 
     @Override
     public void draw(GraphicsHandler graphicsHandler) {
-        // Draw neck/rope first if grappling
-        if (isGrappling() && getGrappleTarget() != null) {
-            Point grappleTarget = getGrappleTarget();
+        // Determine the target point based on grapple state
+        Point targetPoint = null;
+        float extensionProgress = 1.0f; // Full extension by default
+
+        switch (getGrappleAnimationState()) {
+            case EXTENDING -> {
+                targetPoint = getPendingGrappleTarget();
+                extensionProgress = getGrappleExtensionProgress();
+            }
+            case ATTACHED -> {
+                targetPoint = getGrappleTarget();
+                extensionProgress = 1.0f;
+            }
+            case RETRACTING -> {
+                targetPoint = getGrappleTarget();
+                extensionProgress = getGrappleExtensionProgress();
+            }
+            case NONE -> {
+            }
+        }
+        // No grapple to draw
+
+        // Draw neck/rope if in any grapple state
+        if (targetPoint != null && extensionProgress > 0) {
             Graphics2D g = graphicsHandler.getGraphics();
             Camera camera = map.getCamera();
 
@@ -47,15 +68,16 @@ public class Cat extends Player {
 
             int startX = (int) (getCenterX() + startOffsetX - camera.getX());
             int startY = (int) (getCenterY() - camera.getY());
-            int targetX = (int) (grappleTarget.x - camera.getX());
-            int targetY = (int) (grappleTarget.y - camera.getY());
+            int targetX = (int) (targetPoint.x - camera.getX());
+            int targetY = (int) (targetPoint.y - camera.getY());
 
-            float dx = targetX - startX;
-            float dy = targetY - startY;
+            // Calculate the actual extension distance based on animation progress
+            float dx = (targetX - startX) * extensionProgress;
+            float dy = (targetY - startY) * extensionProgress;
             double distance = Math.sqrt(dx * dx + dy * dy);
             double angle = Math.atan2(dy, dx);
 
-            // Draw neck.png along the rope
+            // Draw neck.png along the rope (measuring tape style)
             java.awt.image.BufferedImage neckImage = ImageLoader.load("neck.png");
             int segmentLength = 15;
             int numSegments = (int) (distance / segmentLength);
@@ -75,11 +97,17 @@ public class Cat extends Player {
                 g2d.dispose();
             }
 
-            // Draw head at the end of the rope
-            java.awt.image.BufferedImage headImage = ImageLoader.load("head.png");
-            int offsetPixels = isLeft ? 5 : -5;
-            int offsetX = (int) (targetX - Math.cos(angle + Math.PI / 2) * offsetPixels);
-            int offsetY = (int) (targetY - Math.sin(angle + Math.PI / 2) * offsetPixels);
+            // Draw head at the current extension point
+            String headImageName = (getGrappleAnimationState() == GrappleAnimationState.EXTENDING)
+                ? "head_open.png"
+                : "head.png";
+            java.awt.image.BufferedImage headImage = ImageLoader.load(headImageName);
+            int endX = (int) (startX + dx);
+            int endY = (int) (startY + dy);
+            int offsetForRealsies = headImageName.equals("head_open.png") ? 2 : 5;
+            int offsetPixels = isLeft ? offsetForRealsies : -offsetForRealsies;
+            int offsetX = (int) (endX - Math.cos(angle + Math.PI / 2) * offsetPixels);
+            int offsetY = (int) (endY - Math.sin(angle + Math.PI / 2) * offsetPixels);
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.translate(offsetX, offsetY);
 
@@ -256,6 +284,38 @@ public class Cat extends Player {
             });
 
             put("GRAPPLE_LEFT", new Frame[] {
+                    new FrameBuilder(spriteSheet.getSprite(5, 0))
+                            .withScale(3)
+                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
+                            .withBounds(3, 3, 17, 19)
+                            .build()
+            });
+
+            // Extending animation (same as grapple for now)
+            put("GRAPPLE_EXTEND_RIGHT", new Frame[] {
+                    new FrameBuilder(spriteSheet.getSprite(5, 0))
+                            .withScale(3)
+                            .withBounds(3, 3, 17, 19)
+                            .build()
+            });
+
+            put("GRAPPLE_EXTEND_LEFT", new Frame[] {
+                    new FrameBuilder(spriteSheet.getSprite(5, 0))
+                            .withScale(3)
+                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
+                            .withBounds(3, 3, 17, 19)
+                            .build()
+            });
+
+            // Retracting animation (same as grapple for now)
+            put("GRAPPLE_RETRACT_RIGHT", new Frame[] {
+                    new FrameBuilder(spriteSheet.getSprite(5, 0))
+                            .withScale(3)
+                            .withBounds(3, 3, 17, 19)
+                            .build()
+            });
+
+            put("GRAPPLE_RETRACT_LEFT", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(5, 0))
                             .withScale(3)
                             .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
