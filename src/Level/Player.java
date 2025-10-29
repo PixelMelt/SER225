@@ -134,10 +134,11 @@ public abstract class Player extends GameObject {
         boolean crouch;
 
         void update() {
-            moveLeft = Keyboard.isKeyDown(MOVE_LEFT_KEY);
-            moveRight = Keyboard.isKeyDown(MOVE_RIGHT_KEY);
-            jump = Keyboard.isKeyDown(JUMP_KEY);
-            crouch = Keyboard.isKeyDown(CROUCH_KEY);
+            // arrow keys and WASD
+            moveLeft = Keyboard.isKeyDown(MOVE_LEFT_KEY) || Keyboard.isKeyDown(Key.A);
+            moveRight = Keyboard.isKeyDown(MOVE_RIGHT_KEY) || Keyboard.isKeyDown(Key.D);
+            jump = Keyboard.isKeyDown(JUMP_KEY) || Keyboard.isKeyDown(Key.W);
+            crouch = Keyboard.isKeyDown(CROUCH_KEY) || Keyboard.isKeyDown(Key.S);
         }
     }
 
@@ -214,9 +215,12 @@ public abstract class Player extends GameObject {
         // Track whether jump key is currently held
         isHoldingJump = inputState.jump;
 
+        // if jump is pressed, buffer the jump and lock both jump keys so the press is only counted once
         if (inputState.jump && !keyLocker.isKeyLocked(JUMP_KEY)) {
             jumpBufferTimer = JUMP_BUFFER_FRAMES;
             keyLocker.lockKey(JUMP_KEY);
+            // also lock W so releasing either will be handled consistently
+            keyLocker.lockKey(Key.W);
         }
     }
 
@@ -375,8 +379,10 @@ public abstract class Player extends GameObject {
     }
 
     protected void updateLockedKeys() {
-        if (Keyboard.isKeyUp(JUMP_KEY)) {
+        // unlock jump keys only when both UP and W are released
+        if (Keyboard.isKeyUp(JUMP_KEY) && Keyboard.isKeyUp(Key.W)) {
             keyLocker.unlockKey(JUMP_KEY);
+            keyLocker.unlockKey(Key.W);
         }
         // NODE-GRAPPLE: unlock X key
         if (Keyboard.isKeyUp(NODE_KEY)) {
@@ -474,12 +480,15 @@ public abstract class Player extends GameObject {
             }
         }
 
-        if (isGrappling && Keyboard.isKeyDown(Key.UP) && !keyLocker.isKeyLocked(JUMP_KEY)) {
+        // allow both UP and W to trigger a grapple-release jump
+        if (isGrappling && (Keyboard.isKeyDown(Key.UP) || Keyboard.isKeyDown(Key.W)) && !keyLocker.isKeyLocked(JUMP_KEY)) {
             releaseGrappleWithJump();
             keyLocker.lockKey(JUMP_KEY);
+            keyLocker.lockKey(Key.W);
         }
 
-        if (isGrappling && (Keyboard.isKeyDown(Key.DOWN) ||
+        // allow DOWN or S to release grapple
+        if (isGrappling && (Keyboard.isKeyDown(Key.DOWN) || Keyboard.isKeyDown(Key.S) ||
             (Keyboard.isKeyDown(NODE_KEY) && !keyLocker.isKeyLocked(NODE_KEY)))) {
             releaseGrapple();
             if (Keyboard.isKeyDown(NODE_KEY)) {
@@ -494,8 +503,9 @@ public abstract class Player extends GameObject {
             }
 
             swingAcceleration = (-gravity / ropeLength) * (float) Math.sin(swingAngle);
-            if (Keyboard.isKeyDown(Key.LEFT)) swingAcceleration -= 0.002;
-            if (Keyboard.isKeyDown(Key.RIGHT)) swingAcceleration += 0.002;
+            // allow A/D as alternatives to left/right while swinging
+            if (Keyboard.isKeyDown(Key.LEFT) || Keyboard.isKeyDown(Key.A)) swingAcceleration -= 0.002;
+            if (Keyboard.isKeyDown(Key.RIGHT) || Keyboard.isKeyDown(Key.D)) swingAcceleration += 0.002;
 
             swingVelocity += swingAcceleration;
             swingVelocity *= 0.995f;
@@ -738,6 +748,7 @@ public abstract class Player extends GameObject {
 
     public void completeLevel() {
         levelState = LevelState.LEVEL_COMPLETED;
+        notifyLevelCompleted();
     }
 
     public void updateLevelCompleted() {
@@ -845,5 +856,10 @@ public abstract class Player extends GameObject {
 
     public Point getPendingGrappleTarget() {
         return pendingGrappleTarget;
+    }
+
+    // horoizontal velocity getter
+    public float getVelocityX() {
+        return velocityX;
     }
 }
