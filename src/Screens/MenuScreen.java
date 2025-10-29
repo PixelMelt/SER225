@@ -51,11 +51,11 @@ public class MenuScreen extends Screen {
         // update background map (to play tile animations)
         background.update(null);
 
-        // if down or up is pressed, change menu item "hovered" over (blue square in front of text will move along with currentMenuItemHovered changing)
-        if (Keyboard.isKeyDown(Key.DOWN) &&  keyPressTimer == 0) {
+        // if down or up is pressed or S and W, change menu item "hovered" over (blue square in front of text will move along with currentMenuItemHovered changing)
+        if ((Keyboard.isKeyDown(Key.DOWN) || Keyboard.isKeyDown(Key.S)) &&  keyPressTimer == 0) {
             keyPressTimer = 14;
             currentMenuItemHovered++;
-        } else if (Keyboard.isKeyDown(Key.UP) &&  keyPressTimer == 0) {
+        } else if ((Keyboard.isKeyDown(Key.UP) || Keyboard.isKeyDown(Key.W)) &&  keyPressTimer == 0) {
             keyPressTimer = 14;
             currentMenuItemHovered--;
         } else {
