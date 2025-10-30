@@ -138,7 +138,7 @@ public class MenuScreen extends Screen {
     @Override
     public void draw(GraphicsHandler graphicsHandler) {
         background.draw(graphicsHandler);
-        graphicsHandler.drawFilledRectangle(440, 110, 540, 360, Color.white);
+        graphicsHandler.drawFilledRectangle(440, 110, 540, 300, Color.white);
         //graphicsHandler.drawImage(titleImage, 320, 0, 560, 300);
         playGame.draw(graphicsHandler);
         levelSelect.draw(graphicsHandler);

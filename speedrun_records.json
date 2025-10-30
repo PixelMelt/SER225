@@ -1,5 +1,6 @@
 {
   "records": [
-    {"levelId": 0, "time": 5999}
+    {"levelId": 0, "time": 5999},
+    {"levelId": 1, "time": 19848}
   ]
 }
