@@ -5,6 +5,7 @@ import Engine.GraphicsHandler;
 import Engine.Screen;
 import Screens.CreditsScreen;
 import Screens.InstructionsScreen;
+import Screens.LevelSelectorScreen;
 import Screens.MenuScreen;
 import Screens.PlayLevelScreen;
 import Screens.TitleScreen;
@@ -21,6 +22,10 @@ public class ScreenCoordinator extends Screen {
 	protected GameState gameState;
 	protected GameState previousGameState;
 
+	// Level selection info to pass to PlayLevelScreen
+	protected int selectedLevelId = 0;
+	protected String selectedLevelClassName = "TestMap";
+
 	public GameState getGameState() {
 		return gameState;
 	}
@@ -28,6 +33,22 @@ public class ScreenCoordinator extends Screen {
 	// Other Screens can set the gameState of this class to force it to change the currentScreen
 	public void setGameState(GameState gameState) {
 		this.gameState = gameState;
+	}
+
+	// Set the selected level for PlayLevelScreen to load
+	public void setSelectedLevel(int levelId, String levelClassName) {
+		this.selectedLevelId = levelId;
+		this.selectedLevelClassName = levelClassName;
+	}
+
+	// Get the selected level ID
+	public int getSelectedLevelId() {
+		return selectedLevelId;
+	}
+
+	// Get the selected level class name
+	public String getSelectedLevelClassName() {
+		return selectedLevelClassName;
 	}
 
 	@Override
@@ -48,6 +69,9 @@ public class ScreenCoordinator extends Screen {
 						break;
 					case MENU:
 						currentScreen = new MenuScreen(this);
+						break;
+					case LEVEL_SELECT:
+						currentScreen = new LevelSelectorScreen(this);
 						break;
 					case LEVEL:
 						currentScreen = new PlayLevelScreen(this);

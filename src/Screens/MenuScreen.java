@@ -15,8 +15,9 @@ public class MenuScreen extends Screen {
     protected int currentMenuItemHovered = 0; // current menu item being "hovered" over
     protected int menuItemSelected = -1;
     protected SpriteFont playGame;
-    protected SpriteFont credits;
+    protected SpriteFont levelSelect;
     protected SpriteFont instructions;
+    protected SpriteFont credits;
     protected Map background;
     protected int keyPressTimer;
     protected int pointerLocationX, pointerLocationY;
@@ -34,10 +35,13 @@ public class MenuScreen extends Screen {
         playGame = new SpriteFont("PLAY GAME", 550, 123, "Arial", 30, new Color(49, 207, 240));
         playGame.setOutlineColor(Color.black);
         playGame.setOutlineThickness(3);
+        levelSelect = new SpriteFont("LEVEL SELECT", 550, 173, "Arial", 30, new Color(49, 207, 240));
+        levelSelect.setOutlineColor(Color.black);
+        levelSelect.setOutlineThickness(3);
         instructions = new SpriteFont("INSTRUCTIONS", 550, 223, "Arial", 30, new Color(49, 207, 240));
         instructions.setOutlineColor(Color.black);
         instructions.setOutlineThickness(3);
-        credits = new SpriteFont("CREDITS", 550, 323, "Arial", 30, new Color(49, 207, 240));
+        credits = new SpriteFont("CREDITS", 550, 273, "Arial", 30, new Color(49, 207, 240));
         credits.setOutlineColor(Color.black);
         credits.setOutlineThickness(3);
         background = new TitleScreenMap();
@@ -66,16 +70,17 @@ public class MenuScreen extends Screen {
         }
 
         // if down is pressed on last menu item or up is pressed on first menu item, "loop" the selection back around to the beginning/end
-        if (currentMenuItemHovered > 2) {
+        if (currentMenuItemHovered > 3) {
             currentMenuItemHovered = 0;
         } else if (currentMenuItemHovered < 0) {
-            currentMenuItemHovered = 2;
+            currentMenuItemHovered = 3;
         }
 
         // sets location for blue square in front of text (pointerLocation) and also sets color of spritefont text based on which menu item is being hovered
         switch (currentMenuItemHovered) {
             case 0 -> {
                 playGame.setColor(new Color(255, 215, 0));
+                levelSelect.setColor(new Color(49, 207, 240));
                 instructions.setColor(new Color(49, 207, 240));
                 credits.setColor(new Color(49, 207, 240));
                 pointerLocationX = 500;
@@ -83,17 +88,27 @@ public class MenuScreen extends Screen {
             }
             case 1 -> {
                 playGame.setColor(new Color(49, 207, 240));
+                levelSelect.setColor(new Color(255, 215, 0));
+                instructions.setColor(new Color(49, 207, 240));
+                credits.setColor(new Color(49, 207, 240));
+                pointerLocationX = 500;
+                pointerLocationY = 180;
+            }
+            case 2 -> {
+                playGame.setColor(new Color(49, 207, 240));
+                levelSelect.setColor(new Color(49, 207, 240));
                 instructions.setColor(new Color(255, 215, 0));
                 credits.setColor(new Color(49, 207, 240));
                 pointerLocationX = 500;
                 pointerLocationY = 230;
             }
-            case 2 -> {
+            case 3 -> {
                 playGame.setColor(new Color(49, 207, 240));
+                levelSelect.setColor(new Color(49, 207, 240));
                 instructions.setColor(new Color(49, 207, 240));
                 credits.setColor(new Color(255, 215, 0));
                 pointerLocationX = 500;
-                pointerLocationY = 330;
+                pointerLocationY = 280;
             }
             default -> {
             }
@@ -106,9 +121,14 @@ public class MenuScreen extends Screen {
         if (!keyLocker.isKeyLocked(Key.SPACE) && Keyboard.isKeyDown(Key.SPACE)) {
             menuItemSelected = currentMenuItemHovered;
             switch (menuItemSelected) {
-                case 0 -> screenCoordinator.setGameState(GameState.LEVEL);
-                case 1 -> screenCoordinator.setGameState(GameState.INSTRUCTIONS);
-                case 2 -> screenCoordinator.setGameState(GameState.CREDITS);
+                case 0 -> {
+                    // Play Game - start from TestMap (level 0)
+                    screenCoordinator.setSelectedLevel(0, "TestMap");
+                    screenCoordinator.setGameState(GameState.LEVEL);
+                }
+                case 1 -> screenCoordinator.setGameState(GameState.LEVEL_SELECT);
+                case 2 -> screenCoordinator.setGameState(GameState.INSTRUCTIONS);
+                case 3 -> screenCoordinator.setGameState(GameState.CREDITS);
                 default -> {
                 }
             }
@@ -118,9 +138,10 @@ public class MenuScreen extends Screen {
     @Override
     public void draw(GraphicsHandler graphicsHandler) {
         background.draw(graphicsHandler);
-        graphicsHandler.drawFilledRectangle(440, 110, 540, 310, Color.white);
+        graphicsHandler.drawFilledRectangle(440, 110, 540, 360, Color.white);
         //graphicsHandler.drawImage(titleImage, 320, 0, 560, 300);
         playGame.draw(graphicsHandler);
+        levelSelect.draw(graphicsHandler);
         instructions.draw(graphicsHandler);
         credits.draw(graphicsHandler);
         graphicsHandler.drawFilledRectangleWithBorder(pointerLocationX, pointerLocationY, 20, 20, new Color(255, 215, 0), Color.black, 2);

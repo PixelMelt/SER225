@@ -1,0 +1,24 @@
+{
+  "levels": [
+    {
+      "id": 0,
+      "name": "Test Map",
+      "className": "TestMap"
+    },
+    {
+      "id": 1,
+      "name": "Second Map",
+      "className": "SecondMap"
+    },
+    {
+      "id": 2,
+      "name": "Third Map",
+      "className": "ThirdMap"
+    },
+    {
+      "id": 3,
+      "name": "Fourth Map",
+      "className": "FourthMap"
+    }
+  ]
+}

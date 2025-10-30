@@ -7,13 +7,10 @@ import Engine.Screen;
 import Engine.ScreenManager;
 import Game.GameState;
 import Game.ScreenCoordinator;
+import Game.SpeedrunRecordManager;
 import Level.Map;
 import Level.Player;
 import Level.PlayerListener;
-import Maps.FourthMap;
-import Maps.SecondMap;
-import Maps.TestMap;
-import Maps.ThirdMap;
 import Players.Cat;
 import Utils.MusicPlayer;
 import java.awt.*;
@@ -28,8 +25,10 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
     protected LevelClearedScreen levelClearedScreen;
     protected LevelLoseScreen levelLoseScreen;
     protected boolean levelCompletedStateChangeStart;
-    private int levelCounter = 0;
+    private int currentLevelId;
+    private String currentLevelClassName;
     private MusicPlayer music;
+    private SpeedrunRecordManager recordManager;
     protected boolean speedrunStarted = false;
     protected boolean speedrunFinished = false;
     protected long speedrunStartNano = 0L;
@@ -39,23 +38,29 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
 
     public PlayLevelScreen(ScreenCoordinator screenCoordinator) {
         this.screenCoordinator = screenCoordinator;
+        this.recordManager = SpeedrunRecordManager.getInstance();
     }
 
     @Override
     public void initialize() {
-        // define/setup map
-        switch (levelCounter) {
-            case 1:
-                this.map = new SecondMap();
-                break;
-            case 2:
-                this.map = new ThirdMap();
-                break;
-            case 3:
-                this.map = new FourthMap();
-                break;
-            default:
-                this.map = new TestMap();
+        // Get level info from ScreenCoordinator
+        this.currentLevelId = screenCoordinator.getSelectedLevelId();
+        this.currentLevelClassName = screenCoordinator.getSelectedLevelClassName();
+
+        // Load map dynamically using reflection
+        try {
+            String fullClassName = "Maps." + currentLevelClassName;
+            Class<?> mapClass = Class.forName(fullClassName);
+            this.map = (Map) mapClass.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            System.err.println("Error loading map: " + currentLevelClassName);
+            e.printStackTrace();
+            // Fallback to TestMap if loading fails
+            try {
+                this.map = (Map) Class.forName("Maps.TestMap").getDeclaredConstructor().newInstance();
+            } catch (Exception ex) {
+                throw new RuntimeException("Could not load any map!", ex);
+            }
         }
 
         // setup player
@@ -125,14 +130,8 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
                     levelClearedScreen.update();
                     screenTimer--;
                     if (screenTimer <= 0) {
-                        levelCounter++;
-                        // checks level counter and either call new level or return to main menu
-                        switch (levelCounter) {
-                            case 1 -> initialize();
-                            case 2 -> initialize();
-                            case 3 -> initialize();
-                            default -> goBackToMenu();
-                        }
+                        // Return to level selector after completing a level
+                        goBackToLevelSelector();
                     }
                 }
             }
@@ -192,6 +191,13 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
                 speedrunFinished = true;
                 speedrunEndNano = System.nanoTime();
                 speedrunElapsedMs = (speedrunEndNano - speedrunStartNano) / 1_000_000L;
+
+                // Save the speedrun record
+                boolean isNewRecord = recordManager.saveRecord(currentLevelId, speedrunElapsedMs);
+                if (isNewRecord) {
+                    System.out.println("New record for level " + currentLevelId + ": " +
+                        SpeedrunRecordManager.formatTime(speedrunElapsedMs));
+                }
             }
 
             // pass the final time to the level cleared screen so it can display it
@@ -217,6 +223,10 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
 
     public void goBackToMenu() {
         screenCoordinator.setGameState(GameState.MENU);
+    }
+
+    public void goBackToLevelSelector() {
+        screenCoordinator.setGameState(GameState.LEVEL_SELECT);
     }
 
     // This enum represents the different states this screen can be in
