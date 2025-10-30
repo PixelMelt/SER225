@@ -106,7 +106,6 @@ public abstract class Player extends GameObject {
     protected GrappleAnimationState grappleAnimationState = GrappleAnimationState.NONE;
     protected int grappleAnimationFrame = 0;
     protected static final int GRAPPLE_ANIMATION_MAX_FRAMES = 8;
-    protected Point pendingGrappleTarget = null;
 
     // Release momentum
     protected boolean applyingReleaseMomentum = false;
@@ -431,7 +430,6 @@ public abstract class Player extends GameObject {
             case EXTENDING -> {
                 grappleAnimationFrame++;
                 if (grappleAnimationFrame >= GRAPPLE_ANIMATION_MAX_FRAMES) {
-                    activateGrappleAt(pendingGrappleTarget);
                     grappleAnimationState = GrappleAnimationState.ATTACHED;
                     grappleAnimationFrame = 0;
                 }
@@ -440,10 +438,9 @@ public abstract class Player extends GameObject {
             case RETRACTING -> {
                 grappleAnimationFrame--;
                 if (grappleAnimationFrame <= 0) {
-                    completeGrappleRelease();
                     grappleAnimationState = GrappleAnimationState.NONE;
                     grappleAnimationFrame = 0;
-                    pendingGrappleTarget = null;
+                    grappleTarget = null;
                 }
             }
 
@@ -454,17 +451,6 @@ public abstract class Player extends GameObject {
             }
         }
 
-        if (applyingReleaseMomentum) {
-            moveX(releaseVx);
-            moveY(releaseVy);
-
-            releaseVx *= RELEASE_DAMPING;
-            releaseVy *= RELEASE_DAMPING;
-
-            if (Math.abs(releaseVx) < RELEASE_THRESHOLD && Math.abs(releaseVy) < RELEASE_THRESHOLD) {
-                applyingReleaseMomentum = false;
-            }
-        }
 
         if (grappleAnimationState == GrappleAnimationState.NONE && !keyLocker.isKeyLocked(NODE_KEY) && Keyboard.isKeyDown(NODE_KEY)) {
             Point anchor = findNearestNodeAnchorWithRaycast(getCenterX(), getCenterY(), NODE_RADIUS);
@@ -532,9 +518,10 @@ public abstract class Player extends GameObject {
     }
 
     protected void startGrappleExtension(Point anchor) {
-        this.pendingGrappleTarget = anchor;
         this.grappleAnimationState = GrappleAnimationState.EXTENDING;
         this.grappleAnimationFrame = 0;
+        // Start swinging immediately
+        activateGrappleAt(anchor);
     }
 
     public void activateGrappleAt(Point anchor) {
@@ -574,6 +561,10 @@ public abstract class Player extends GameObject {
         }
 
         if (grappleAnimationState == GrappleAnimationState.EXTENDING) {
+            isGrappling = false;
+            ropeLength = 0f;
+            swingVelocity = 0f;
+            swingAcceleration = 0f;
             grappleAnimationState = GrappleAnimationState.RETRACTING;
             return;
         }
@@ -589,11 +580,9 @@ public abstract class Player extends GameObject {
         impulseX *= momentumMultiplier;
         impulseY *= momentumMultiplier;
 
-        grappleAnimationState = GrappleAnimationState.RETRACTING;
-        grappleAnimationFrame = GRAPPLE_ANIMATION_MAX_FRAMES;
-
+        // Apply momentum immediately
         if (shouldJump) {
-            velocityX = impulseX;
+            velocityX += impulseX;
             velocityY = -jumpVelocity + (impulseY * 0.5f);
             airGroundState = AirGroundState.AIR;
             jumpedIntoAir = true;
@@ -602,24 +591,20 @@ public abstract class Player extends GameObject {
             coyoteTimeTimer = 0;
             playerState = PlayerState.JUMPING;
             currentAnimationName = getAnimationName("JUMP");
-
-            applyingReleaseMomentum = false;
         } else {
-            releaseVx = impulseX;
-            releaseVy = impulseY;
+            velocityX += impulseX;
+            velocityY += impulseY;
         }
-    }
 
-    private void completeGrappleRelease() {
+        // Release grapple physics immediately but keep visual animation
         isGrappling = false;
-        grappleTarget = null;
         ropeLength = 0f;
         swingVelocity = 0f;
         swingAcceleration = 0f;
 
-        if (releaseVx != 0 || releaseVy != 0) {
-            applyingReleaseMomentum = true;
-        }
+        // Start retract animation (visual only)
+        grappleAnimationState = GrappleAnimationState.RETRACTING;
+        grappleAnimationFrame = GRAPPLE_ANIMATION_MAX_FRAMES;
     }
 
     private Point findNearestNodeAnchorWithRaycast(float px, float py, float maxRadiusPx) {
@@ -841,9 +826,5 @@ public abstract class Player extends GameObject {
             return 0.0f;
         }
         return (float) grappleAnimationFrame / (float) GRAPPLE_ANIMATION_MAX_FRAMES;
-    }
-
-    public Point getPendingGrappleTarget() {
-        return pendingGrappleTarget;
     }
 }

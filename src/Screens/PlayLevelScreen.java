@@ -12,6 +12,7 @@ import Maps.SecondMap;
 import Maps.TestMap;
 import Maps.ThirdMap;
 import Players.Cat;
+import Utils.MusicPlayer;
 
 // This class is for when the platformer game is actually being played
 public class PlayLevelScreen extends Screen implements PlayerListener {
@@ -24,6 +25,7 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
     protected LevelLoseScreen levelLoseScreen;
     protected boolean levelCompletedStateChangeStart;
     private int levelCounter = 0;
+    private MusicPlayer music;
 
     public PlayLevelScreen(ScreenCoordinator screenCoordinator) {
         this.screenCoordinator = screenCoordinator;
@@ -54,6 +56,12 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
         levelLoseScreen = new LevelLoseScreen(this);
 
         this.playLevelScreenState = PlayLevelScreenState.RUNNING;
+
+        // Start music
+        if (music == null) {
+            music = new MusicPlayer();
+            music.play("Resources/Audio/Music/PentagramIncident.wav", true);
+        }
     }
 
     public void update() {

@@ -35,7 +35,7 @@ public class Cat extends Player {
 
         switch (getGrappleAnimationState()) {
             case EXTENDING -> {
-                targetPoint = getPendingGrappleTarget();
+                targetPoint = getGrappleTarget();
                 extensionProgress = getGrappleExtensionProgress();
             }
             case ATTACHED -> {
