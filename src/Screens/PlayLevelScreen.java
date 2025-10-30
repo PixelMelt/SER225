@@ -1,7 +1,10 @@
 package Screens;
 
 import Engine.GraphicsHandler;
+import Engine.Key;
+import Engine.Keyboard;
 import Engine.Screen;
+import Engine.ScreenManager;
 import Game.GameState;
 import Game.ScreenCoordinator;
 import Level.Map;
@@ -13,6 +16,7 @@ import Maps.TestMap;
 import Maps.ThirdMap;
 import Players.Cat;
 import Utils.MusicPlayer;
+import java.awt.*;
 
 // This class is for when the platformer game is actually being played
 public class PlayLevelScreen extends Screen implements PlayerListener {
@@ -26,6 +30,12 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
     protected boolean levelCompletedStateChangeStart;
     private int levelCounter = 0;
     private MusicPlayer music;
+    protected boolean speedrunStarted = false;
+    protected boolean speedrunFinished = false;
+    protected long speedrunStartNano = 0L;
+    protected long speedrunEndNano = 0L;
+    protected long speedrunElapsedMs = 0L;
+    protected Font timerFont;
 
     public PlayLevelScreen(ScreenCoordinator screenCoordinator) {
         this.screenCoordinator = screenCoordinator;
@@ -52,6 +62,14 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
         this.player.setMap(map);
         this.player.addListener(this);
 
+    // initialize speedrun timer
+    speedrunStarted = false;
+    speedrunFinished = false;
+    speedrunStartNano = 0L;
+    speedrunEndNano = 0L;
+    speedrunElapsedMs = 0L;
+    timerFont = new Font("Arial", Font.BOLD, 20);
+
         levelClearedScreen = new LevelClearedScreen();
         levelLoseScreen = new LevelLoseScreen(this);
 
@@ -71,6 +89,32 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
             case RUNNING:
                 map.update(player);
                 player.update();
+
+                // start the timer when keys are pressed
+                if (!speedrunStarted) {
+                    boolean shouldStart = false;
+                    try {
+                        if (Math.abs(player.getVelocityX()) > 0.001f) {
+                            shouldStart = true;
+                        }
+                    } catch (Exception ignored) {
+                    }
+
+                    // if velocity hasn't changed yet, also start when keys are pressed
+                    if (!shouldStart) {
+                        if (Keyboard.isKeyDown(Key.LEFT) || Keyboard.isKeyDown(Key.RIGHT)
+                                || Keyboard.isKeyDown(Key.A) || Keyboard.isKeyDown(Key.D)
+                                || Keyboard.isKeyDown(Key.UP) || Keyboard.isKeyDown(Key.DOWN)
+                                || Keyboard.isKeyDown(Key.W) || Keyboard.isKeyDown(Key.S)) {
+                            shouldStart = true;
+                        }
+                    }
+
+                    if (shouldStart) {
+                        speedrunStarted = true;
+                        speedrunStartNano = System.nanoTime();
+                    }
+                }
                 break;
             // if level has been completed, bring up level cleared screen
             case LEVEL_COMPLETED:
@@ -128,6 +172,23 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
                 levelLoseScreen.draw(graphicsHandler);
                 break;
         }
+
+        // speedrun timer as well as placement on top-right
+        if (playLevelScreenState == PlayLevelScreenState.RUNNING) {
+            String timeString = "00:00.00";
+            if (speedrunStarted) {
+                long displayMs = (speedrunFinished) ? speedrunElapsedMs : (System.nanoTime() - speedrunStartNano) / 1_000_000L;
+                long minutes = (displayMs / 1000) / 60;
+                long seconds = (displayMs / 1000) % 60;
+                long milliseconds = (displayMs % 1000) / 10;
+                timeString = String.format("%02d:%02d.%02d", minutes, seconds, milliseconds);
+            }
+
+            // place on top right of screen
+            int x = ScreenManager.getScreenWidth() - 110;
+            int y = 30;
+            graphicsHandler.drawStringWithOutline(timeString, x, y, timerFont, Color.white, Color.black, 3f);
+        }
     }
 
     public PlayLevelScreenState getPlayLevelScreenState() {
@@ -137,6 +198,18 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
     @Override
     public void onLevelCompleted() {
         if (playLevelScreenState != PlayLevelScreenState.LEVEL_COMPLETED) {
+            // stop the speedrun timer when level is completed
+            if (speedrunStarted && !speedrunFinished) {
+                speedrunFinished = true;
+                speedrunEndNano = System.nanoTime();
+                speedrunElapsedMs = (speedrunEndNano - speedrunStartNano) / 1_000_000L;
+            }
+
+            // pass the final time to the level cleared screen so it can display it
+            if (levelClearedScreen != null) {
+                levelClearedScreen.setFinalTime(speedrunElapsedMs);
+            }
+
             playLevelScreenState = PlayLevelScreenState.LEVEL_COMPLETED;
             levelCompletedStateChangeStart = true;
         }
