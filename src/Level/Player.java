@@ -388,12 +388,15 @@ public abstract class Player extends GameObject {
             keyLocker.unlockKey(JUMP_KEY);
             keyLocker.unlockKey(Key.W);
         }
-        // NODE-GRAPPLE: unlock X key
-        if (Keyboard.isKeyUp(NODE_KEY)) {
+        // NODE-GRAPPLE: unlock X and N keys when both released
+        if (Keyboard.isKeyUp(NODE_KEY) && Keyboard.isKeyUp(Key.N)) {
             keyLocker.unlockKey(NODE_KEY);
+            keyLocker.unlockKey(Key.N);
         }
-        if (Keyboard.isKeyUp(HONK_KEY)) {
+        // HONK: unlock Z and M keys when both released
+        if (Keyboard.isKeyUp(HONK_KEY) && Keyboard.isKeyUp(Key.M)) {
             keyLocker.unlockKey(HONK_KEY);
+            keyLocker.unlockKey(Key.M);
         }
     }
 
@@ -466,11 +469,15 @@ public abstract class Player extends GameObject {
         }
 
 
-        if (grappleAnimationState == GrappleAnimationState.NONE && !keyLocker.isKeyLocked(NODE_KEY) && Keyboard.isKeyDown(NODE_KEY)) {
+        // Allow either X or N to start a grapple
+        if (grappleAnimationState == GrappleAnimationState.NONE && !keyLocker.isKeyLocked(NODE_KEY) && !keyLocker.isKeyLocked(Key.N)
+                && (Keyboard.isKeyDown(NODE_KEY) || Keyboard.isKeyDown(Key.N))) {
             Point anchor = findNearestNodeAnchorWithRaycast(getCenterX(), getCenterY(), NODE_RADIUS);
             if (anchor != null) {
                 startGrappleExtension(anchor);
+                // lock both possible node keys so holding either doesn't retrigger
                 keyLocker.lockKey(NODE_KEY);
+                keyLocker.lockKey(Key.N);
             }
         }
 
@@ -481,19 +488,21 @@ public abstract class Player extends GameObject {
             keyLocker.lockKey(Key.W);
         }
 
-        // allow DOWN or S to release grapple
+        // allow DOWN or S to release grapple, or pressing the node key again (X or N)
         if (isGrappling && (Keyboard.isKeyDown(Key.DOWN) || Keyboard.isKeyDown(Key.S) ||
-            (Keyboard.isKeyDown(NODE_KEY) && !keyLocker.isKeyLocked(NODE_KEY)))) {
+            ((Keyboard.isKeyDown(NODE_KEY) || Keyboard.isKeyDown(Key.N)) && !keyLocker.isKeyLocked(NODE_KEY) && !keyLocker.isKeyLocked(Key.N)))) {
             releaseGrapple();
-            if (Keyboard.isKeyDown(NODE_KEY)) {
+            if (Keyboard.isKeyDown(NODE_KEY) || Keyboard.isKeyDown(Key.N)) {
                 keyLocker.lockKey(NODE_KEY);
+                keyLocker.lockKey(Key.N);
             }
         }
 
-        // play goose sound when Z is pressed
-        if (Keyboard.isKeyDown(HONK_KEY) && !keyLocker.isKeyLocked(HONK_KEY)) {
+        // play goose sound when Z or M is pressed
+        if ((Keyboard.isKeyDown(HONK_KEY) || Keyboard.isKeyDown(Key.M)) && !keyLocker.isKeyLocked(HONK_KEY) && !keyLocker.isKeyLocked(Key.M)) {
             SoundController.getInstance().playSound("goose");
             keyLocker.lockKey(HONK_KEY);
+            keyLocker.lockKey(Key.M);
         }
 
         if (isGrappling && grappleTarget != null) {
