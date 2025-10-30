@@ -41,6 +41,7 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
         this.screenCoordinator = screenCoordinator;
     }
 
+    @Override
     public void initialize() {
         // define/setup map
         switch (levelCounter) {
@@ -82,11 +83,11 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
         }
     }
 
+    @Override
     public void update() {
         // based on screen state, perform specific actions
         switch (playLevelScreenState) {
-            // if level is "running" update player and map to keep game logic for the platformer level going
-            case RUNNING:
+            case RUNNING -> {
                 map.update(player);
                 player.update();
 
@@ -115,9 +116,8 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
                         speedrunStartNano = System.nanoTime();
                     }
                 }
-                break;
-            // if level has been completed, bring up level cleared screen
-            case LEVEL_COMPLETED:
+            }
+            case LEVEL_COMPLETED -> {
                 if (levelCompletedStateChangeStart) {
                     screenTimer = 130;
                     levelCompletedStateChangeStart = false;
@@ -128,33 +128,26 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
                         levelCounter++;
                         // checks level counter and either call new level or return to main menu
                         switch (levelCounter) {
-                            case 1:
-                                initialize();
-                                break;
-                            case 2:
-                                initialize();
-                                break;
-                            case 3:
-                                initialize();
-                                break;
-                            default:
-                                goBackToMenu();
-                                break;
+                            case 1 -> initialize();
+                            case 2 -> initialize();
+                            case 3 -> initialize();
+                            default -> goBackToMenu();
                         }
                     }
                 }
-                break;
-            // wait on level lose screen to make a decision (either resets level or sends player back to main menu)
-            case LEVEL_LOSE:
-                levelLoseScreen.update();
-                break;
+            }
+            case LEVEL_LOSE -> levelLoseScreen.update();
         }
-    }
+        // if level is "running" update player and map to keep game logic for the platformer level going
+        // if level has been completed, bring up level cleared screen
+        // wait on level lose screen to make a decision (either resets level or sends player back to main menu)
+            }
 
+    @Override
     public void draw(GraphicsHandler graphicsHandler) {
         // based on screen state, draw appropriate graphics
         switch (playLevelScreenState) {
-            case RUNNING:
+            case RUNNING -> {
                 map.draw(graphicsHandler);
                 player.draw(graphicsHandler);
 
@@ -164,13 +157,9 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
                         npc.drawDialogueBox(graphicsHandler);
                     }
                 }
-                break;
-            case LEVEL_COMPLETED:
-                levelClearedScreen.draw(graphicsHandler);
-                break;
-            case LEVEL_LOSE:
-                levelLoseScreen.draw(graphicsHandler);
-                break;
+            }
+            case LEVEL_COMPLETED -> levelClearedScreen.draw(graphicsHandler);
+            case LEVEL_LOSE -> levelLoseScreen.draw(graphicsHandler);
         }
 
         // speedrun timer as well as placement on top-right

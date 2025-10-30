@@ -5,22 +5,19 @@ import Engine.GraphicsHandler;
 import GameObject.Rectangle;
 import Level.EnhancedMapTile;
 import Level.Player;
-import Level.PlayerState;
 import Level.TileType;
-import Utils.AirGroundState;
 import Utils.Direction;
 import Utils.Point;
-
 import java.awt.image.BufferedImage;
 
 // This class is for a vertical moving platform
 // the platform will move back and forth between its start location and end location
 // if the player is standing on top of it, the player will be moved the same amount as the platform is moving (so the platform will not slide out from under the player)
-public class VerticalMovingPlatform extends EnhancedMapTile {
-    private Point startLocation;
-    private Point endLocation;
-    private float movementSpeed = 1f;
-    private Direction startDirection;
+public final class VerticalMovingPlatform extends EnhancedMapTile {
+    private final Point startLocation;
+    private final Point endLocation;
+    private final float movementSpeed = 1f;
+    private final Direction startDirection;
     private Direction direction;
 
     public VerticalMovingPlatform(BufferedImage image, Point startLocation, Point endLocation, TileType tileType, float scale, Rectangle bounds, Direction startDirection) {
@@ -90,6 +87,7 @@ public class VerticalMovingPlatform extends EnhancedMapTile {
         super.update(player);
     }
 
+    @Override
     public void draw(GraphicsHandler graphicsHandler) {
         super.draw(graphicsHandler);
     }

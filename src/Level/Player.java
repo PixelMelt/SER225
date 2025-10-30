@@ -10,6 +10,7 @@ import GameObject.SpriteSheet;
 import Utils.AirGroundState;
 import Utils.Direction;
 import Utils.Point;
+import Utils.SoundController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,7 @@ public abstract class Player extends GameObject {
     protected Key CROUCH_KEY = Key.DOWN;
 
     protected Key NODE_KEY = Key.X;
+    protected Key HONK_KEY = Key.Z;
     protected static final int NODE_TILE_INDEX = 3; // tile index of your node
     protected static final float NODE_RADIUS = 1000f;  // how close you must be (pixels) to press X and attach
 
@@ -123,6 +125,9 @@ public abstract class Player extends GameObject {
         playerState = PlayerState.STANDING;
         previousPlayerState = playerState;
         levelState = LevelState.RUNNING;
+
+        // Initialize goose sound
+        SoundController.getInstance().loadSound("goose", "Resources/Audio/SFX/goose.wav");
     }
 
     // Inner class for input state management
@@ -387,6 +392,9 @@ public abstract class Player extends GameObject {
         if (Keyboard.isKeyUp(NODE_KEY)) {
             keyLocker.unlockKey(NODE_KEY);
         }
+        if (Keyboard.isKeyUp(HONK_KEY)) {
+            keyLocker.unlockKey(HONK_KEY);
+        }
     }
 
     // Helper method for animation names
@@ -480,6 +488,12 @@ public abstract class Player extends GameObject {
             if (Keyboard.isKeyDown(NODE_KEY)) {
                 keyLocker.lockKey(NODE_KEY);
             }
+        }
+
+        // play goose sound when Z is pressed
+        if (Keyboard.isKeyDown(HONK_KEY) && !keyLocker.isKeyLocked(HONK_KEY)) {
+            SoundController.getInstance().playSound("goose");
+            keyLocker.lockKey(HONK_KEY);
         }
 
         if (isGrappling && grappleTarget != null) {
@@ -593,7 +607,7 @@ public abstract class Player extends GameObject {
         // Apply momentum immediately
         if (shouldJump) {
             velocityX += impulseX;
-            velocityY = -jumpVelocity + (impulseY * 0.5f);
+            velocityY = -jumpVelocity + (impulseY * 0.3f);
             airGroundState = AirGroundState.AIR;
             jumpedIntoAir = true;
             isHoldingJump = true;
@@ -837,10 +851,6 @@ public abstract class Player extends GameObject {
             return 0.0f;
         }
         return (float) grappleAnimationFrame / (float) GRAPPLE_ANIMATION_MAX_FRAMES;
-    }
-
-    public Point getPendingGrappleTarget() {
-        return pendingGrappleTarget;
     }
 
     // horoizontal velocity getter

@@ -47,6 +47,7 @@ public class MenuScreen extends Screen {
         keyLocker.lockKey(Key.SPACE);
     }
 
+    @Override
     public void update() {
         // update background map (to play tile animations)
         background.update(null);
@@ -72,24 +73,30 @@ public class MenuScreen extends Screen {
         }
 
         // sets location for blue square in front of text (pointerLocation) and also sets color of spritefont text based on which menu item is being hovered
-        if (currentMenuItemHovered == 0) {
-            playGame.setColor(new Color(255, 215, 0));
-            instructions.setColor(new Color(49, 207, 240));
-            credits.setColor(new Color(49, 207, 240));
-            pointerLocationX = 500;
-            pointerLocationY = 130;
-        } else if (currentMenuItemHovered == 1) {
-            playGame.setColor(new Color(49, 207, 240));
-            instructions.setColor(new Color(255, 215, 0));
-            credits.setColor(new Color(49, 207, 240));
-            pointerLocationX = 500;
-            pointerLocationY = 230;
-        } else if (currentMenuItemHovered == 2) {
-            playGame.setColor(new Color(49, 207, 240));
-            instructions.setColor(new Color(49, 207, 240));
-            credits.setColor(new Color(255, 215, 0));
-            pointerLocationX = 500;
-            pointerLocationY = 330;
+        switch (currentMenuItemHovered) {
+            case 0 -> {
+                playGame.setColor(new Color(255, 215, 0));
+                instructions.setColor(new Color(49, 207, 240));
+                credits.setColor(new Color(49, 207, 240));
+                pointerLocationX = 500;
+                pointerLocationY = 130;
+            }
+            case 1 -> {
+                playGame.setColor(new Color(49, 207, 240));
+                instructions.setColor(new Color(255, 215, 0));
+                credits.setColor(new Color(49, 207, 240));
+                pointerLocationX = 500;
+                pointerLocationY = 230;
+            }
+            case 2 -> {
+                playGame.setColor(new Color(49, 207, 240));
+                instructions.setColor(new Color(49, 207, 240));
+                credits.setColor(new Color(255, 215, 0));
+                pointerLocationX = 500;
+                pointerLocationY = 330;
+            }
+            default -> {
+            }
         }
 
         // if space is pressed on menu item, change to appropriate screen based on which menu item was chosen
@@ -98,17 +105,17 @@ public class MenuScreen extends Screen {
         }
         if (!keyLocker.isKeyLocked(Key.SPACE) && Keyboard.isKeyDown(Key.SPACE)) {
             menuItemSelected = currentMenuItemHovered;
-            if (menuItemSelected == 0) {
-                screenCoordinator.setGameState(GameState.LEVEL);
-            } else if (menuItemSelected == 1) {
-                screenCoordinator.setGameState(GameState.INSTRUCTIONS);
-            } else if (menuItemSelected == 2) {
-                screenCoordinator.setGameState(GameState.CREDITS);
-
+            switch (menuItemSelected) {
+                case 0 -> screenCoordinator.setGameState(GameState.LEVEL);
+                case 1 -> screenCoordinator.setGameState(GameState.INSTRUCTIONS);
+                case 2 -> screenCoordinator.setGameState(GameState.CREDITS);
+                default -> {
+                }
             }
         }
     }
 
+    @Override
     public void draw(GraphicsHandler graphicsHandler) {
         background.draw(graphicsHandler);
         graphicsHandler.drawFilledRectangle(440, 110, 540, 310, Color.white);
