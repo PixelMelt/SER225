@@ -28,10 +28,10 @@ public class GoodGoose extends NPC {
 
         // Setup dialogue sequence
         dialogueSequence = new Level.DialogueSequence();
-        dialogueSequence.addMessage("You have forsaken us brother.", npcPortrait);
-        dialogueSequence.addMessage("It is I how is the choosen one.", playerPortrait);
-        dialogueSequence.addMessage("Are breadtheren will come for you.", npcPortrait);
-        dialogueSequence.addMessage("*Smug*", playerPortrait);
+        dialogueSequence.addMessage("You have done well Sir Honk-a-lots.", npcPortrait);
+        dialogueSequence.addMessage("Why do you take a from similar to me?", playerPortrait);
+        dialogueSequence.addMessage("This is my true form.", npcPortrait);
+        dialogueSequence.addMessage("Identity Theft is no joke. *waddles away, waddle waddle*", playerPortrait);
     }
 
     public void update(Player player) {

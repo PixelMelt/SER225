@@ -30,8 +30,8 @@ public class EvilGoose extends NPC {
         dialogueSequence = new Level.DialogueSequence();
         dialogueSequence.addMessage("You have forsaken us brother.", npcPortrait);
         dialogueSequence.addMessage("It is I how is the choosen one.", playerPortrait);
-        dialogueSequence.addMessage("Are breadtheren will come for you.", npcPortrait);
-        dialogueSequence.addMessage("*Smug*", playerPortrait);
+        dialogueSequence.addMessage("Our breadtheren will come for you.", npcPortrait);
+        dialogueSequence.addMessage("*waddles away smugly*", playerPortrait);
     }
 
     public void update(Player player) {
@@ -48,13 +48,13 @@ public class EvilGoose extends NPC {
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
         return new HashMap<String, Frame[]>() {{
-           put("Smile", new Frame[] {
+           put("Goose", new Frame[] {
                    new FrameBuilder(spriteSheet.getSprite(0, 0))
                            .withScale(4)
                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
                            .build()
            });
-            put("Frown", new Frame[] {
+            put("Goose1", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(1, 0))
                             .withScale(4)
                             .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
