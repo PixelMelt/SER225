@@ -222,10 +222,18 @@ public class PlayLevelScreen extends Screen implements PlayerListener {
     }
 
     public void goBackToMenu() {
+        if (music != null) {
+            music.stop();
+            music = null;
+        }
         screenCoordinator.setGameState(GameState.MENU);
     }
 
     public void goBackToLevelSelector() {
+        if (music != null) {
+            music.stop();
+            music = null;
+        }
         screenCoordinator.setGameState(GameState.LEVEL_SELECT);
     }
 
