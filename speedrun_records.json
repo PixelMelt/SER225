@@ -1,9 +1,10 @@
 {
   "records": [
-    {"levelId": 0, "time": 7516},
+    {"levelId": 0, "time": 5532},
     {"levelId": 1, "time": 19848},
-    {"levelId": 2, "time": 12649},
+    {"levelId": 2, "time": 11267},
     {"levelId": 4, "time": 32378},
-    {"levelId": 5, "time": 10865}
+    {"levelId": 5, "time": 10865},
+    {"levelId": 6, "time": 34433}
   ]
 }
