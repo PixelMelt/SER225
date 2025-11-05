@@ -18,20 +18,25 @@ import java.util.Map;
 import java.util.HashMap;
 
 public abstract class Player extends GameObject {
+    // Death animation timer
     private int deathAnimationTimer = 0;
+    // Constants
     private static final float CROUCH_FRICTION_MULTIPLIER = 0.8f;
     private static final float LEVEL_COMPLETE_SPEED_MULTIPLIER = 0.5f;
 
+    // Jump timing
     private static final int JUMP_BUFFER_FRAMES = 10;
     private static final int COYOTE_TIME_FRAMES = 7;
     private static final float JUMP_RELEASE_MULTIPLIER = 0.9f;
 
+    // Animation mappings
     private static final Map<PlayerState, String> STATE_ANIMATIONS = Map.of(
         PlayerState.STANDING, "STAND",
         PlayerState.WALKING, "WALK",
         PlayerState.CROUCHING, "CROUCH"
     );
 
+    // Physics constants, these should be set in a subclass
     protected float maxRunSpeed;
     protected float maxPhysicsSpeed;
     protected float horizontalAcceleration;
@@ -41,16 +46,21 @@ public abstract class Player extends GameObject {
     protected float jumpVelocity;
     protected float maxFallSpeed;
 
+    // Velocity values
     protected float velocityX;
     protected float velocityY;
+
+    // Movement amounts for this frame
     protected float moveAmountX, moveAmountY;
     protected float lastAmountMovedX, lastAmountMovedY;
 
+    // Jump state
     private int jumpBufferTimer = 0;
     private int coyoteTimeTimer = 0;
     private boolean jumpedIntoAir = false;
     private boolean isHoldingJump = false;
 
+    // State tracking
     protected PlayerState playerState;
     protected PlayerState previousPlayerState;
     protected Direction facingDirection;
@@ -58,8 +68,10 @@ public abstract class Player extends GameObject {
     protected AirGroundState previousAirGroundState;
     protected LevelState levelState;
 
+    // Listeners
     protected List<PlayerListener> listeners = new ArrayList<>();
 
+    // Input handling
     protected KeyLocker keyLocker = new KeyLocker();
     protected Key JUMP_KEY = Key.UP;
     protected Key MOVE_LEFT_KEY = Key.LEFT;
