@@ -12,15 +12,25 @@ public class SeventhMap extends Map {
 
     public SeventhMap() {
         super("seventh_map.txt", new CommonTileset());
-        //this.playerStartPosition = getMapTile(2, 72).getLocation();
+        this.playerStartPosition = getMapTile(2, 47).getLocation();
     }
 
      @Override
     public ArrayList<EnhancedMapTile> loadEnhancedMapTiles() {
         ArrayList<EnhancedMapTile> enhancedMapTiles = new ArrayList<>();
 
-        //EndLevelBox endLevelBox = new EndLevelBox(getMapTile(52, 12).getLocation());
-        //enhancedMapTiles.add(endLevelBox);
+        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(101, 45).getLocation());
+        enhancedMapTiles.add(endLevelBox);
+
+        for(int i = 55; i < 98; i++){
+            Spike spike1 = new Spike(getMapTile(i, 38).getLocation(),true);
+            enhancedMapTiles.add(spike1);
+        }
+
+        for(int i = 62; i < 96; i++){
+            Spike spike1 = new Spike(getMapTile(i, 48).getLocation());
+            enhancedMapTiles.add(spike1);
+        }
 
         return enhancedMapTiles;
     }
