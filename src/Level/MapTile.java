@@ -14,6 +14,9 @@ public class MapTile extends MapEntity {
 
     private int tileIndex;
 
+    // New field to store inactive frame
+    protected Frame inactiveFrame;
+
     public MapTile(float x, float y, HashMap<String, Frame[]> animations, TileType tileType, int tileIndex) {
         super(x, y, animations, "DEFAULT");
         this.tileType = tileType;
@@ -48,6 +51,18 @@ public class MapTile extends MapEntity {
         return tileIndex;
     }
 
+    public void setTileIndex(int tileIndex) {
+        this.tileIndex = tileIndex;
+    }
+
+    public void setInactiveFrame(Frame frame) {
+        this.inactiveFrame = frame;
+    }
+
+    public Frame getInactiveFrame() {
+        return inactiveFrame;
+    }
+
     // determines if tile is animated or not
     public boolean isAnimated() {
         return getCurrentAnimation().length > 1;
@@ -64,7 +79,7 @@ public class MapTile extends MapEntity {
     public void draw(GraphicsHandler graphicsHandler) {
         super.draw(graphicsHandler);
 
-        // uncomment this to draw bounds of all non passable tiles (useful for debugging)
+        // uncomment this to draw bounds of all non passable tiles 
         /*
         if (tileType == TileType.NOT_PASSABLE) {
             drawBounds(graphicsHandler, new Color(0, 0, 255, 100));

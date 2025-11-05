@@ -400,4 +400,13 @@ public abstract class Map {
 
     public int getEndBoundX() { return endBoundX; }
     public int getEndBoundY() { return endBoundY; }
+
+    public void setTileIndex(int x, int y, int newTileIndex) {
+        if (isInBounds(x, y)) {
+            MapTile oldTile = getMapTile(x, y);
+            MapTile newTile = tileset.getTile(newTileIndex).build(oldTile.getX(), oldTile.getY());
+            newTile.setMap(this);
+            setMapTile(x, y, newTile);
+        }
+    }
 }

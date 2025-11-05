@@ -3,6 +3,7 @@ package Level;
 import Engine.Key;
 import Engine.KeyLocker;
 import Engine.Keyboard;
+import Engine.Mouse;
 import GameObject.Frame;
 import GameObject.GameObject;
 import GameObject.ImageEffect;
@@ -14,27 +15,23 @@ import Utils.SoundController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 public abstract class Player extends GameObject {
-    // Death animation timer
     private int deathAnimationTimer = 0;
-    // Constants
     private static final float CROUCH_FRICTION_MULTIPLIER = 0.8f;
     private static final float LEVEL_COMPLETE_SPEED_MULTIPLIER = 0.5f;
 
-    // Jump timing
     private static final int JUMP_BUFFER_FRAMES = 10;
     private static final int COYOTE_TIME_FRAMES = 7;
     private static final float JUMP_RELEASE_MULTIPLIER = 0.9f;
 
-    // Animation mappings
     private static final Map<PlayerState, String> STATE_ANIMATIONS = Map.of(
         PlayerState.STANDING, "STAND",
         PlayerState.WALKING, "WALK",
         PlayerState.CROUCHING, "CROUCH"
     );
 
-    // Physics constants, these should be set in a subclass
     protected float maxRunSpeed;
     protected float maxPhysicsSpeed;
     protected float horizontalAcceleration;
@@ -44,21 +41,16 @@ public abstract class Player extends GameObject {
     protected float jumpVelocity;
     protected float maxFallSpeed;
 
-    // Velocity values
     protected float velocityX;
     protected float velocityY;
-
-    // Movement amounts for this frame
     protected float moveAmountX, moveAmountY;
     protected float lastAmountMovedX, lastAmountMovedY;
 
-    // Jump state
     private int jumpBufferTimer = 0;
     private int coyoteTimeTimer = 0;
     private boolean jumpedIntoAir = false;
     private boolean isHoldingJump = false;
 
-    // State tracking
     protected PlayerState playerState;
     protected PlayerState previousPlayerState;
     protected Direction facingDirection;
@@ -66,10 +58,8 @@ public abstract class Player extends GameObject {
     protected AirGroundState previousAirGroundState;
     protected LevelState levelState;
 
-    // Listeners
     protected List<PlayerListener> listeners = new ArrayList<>();
 
-    // Input handling
     protected KeyLocker keyLocker = new KeyLocker();
     protected Key JUMP_KEY = Key.UP;
     protected Key MOVE_LEFT_KEY = Key.LEFT;
@@ -78,18 +68,15 @@ public abstract class Player extends GameObject {
 
     protected Key NODE_KEY = Key.X;
     protected Key HONK_KEY = Key.Z;
-    protected static final int NODE_TILE_INDEX = 3; // tile index of your node
-    protected static final float NODE_RADIUS = 1000f;  // how close you must be (pixels) to press X and attach
+    protected static final int NODE_TILE_INDEX = 3;
+    private static final int BITTEN_NODE_TILE_INDEX = 4; // new tile for bitten node
+    protected static final float NODE_RADIUS = 1000f;
 
-    // Input state
     private final InputState inputState = new InputState();
-
-    // Flags
     protected boolean isInvincible;
     public boolean isOnMovingPlatform;
     protected boolean wantsFallThroughPlatform;
 
-    // Grapple variables
     protected boolean isGrappling = false;
     protected Point grappleTarget;
     protected float ropeLength;
@@ -98,18 +85,20 @@ public abstract class Player extends GameObject {
     protected float swingAcceleration;
     protected float gravity = 0.4f;
 
-    // Grapple animation state
+    private final Map<String, Long> inactiveNodes = new HashMap<>();
+    private static final long NODE_COOLDOWN_MS = 3000; // 3s
+
     protected enum GrappleAnimationState {
         NONE,
         EXTENDING,
         ATTACHED,
         RETRACTING
     }
+
     protected GrappleAnimationState grappleAnimationState = GrappleAnimationState.NONE;
     protected int grappleAnimationFrame = 0;
     protected static final int GRAPPLE_ANIMATION_MAX_FRAMES = 8;
 
-    // Release momentum
     protected boolean applyingReleaseMomentum = false;
     protected float releaseVx = 0f;
     protected float releaseVy = 0f;
@@ -126,11 +115,9 @@ public abstract class Player extends GameObject {
         previousPlayerState = playerState;
         levelState = LevelState.RUNNING;
 
-        // Initialize goose sound
         SoundController.getInstance().loadSound("goose", "Resources/Audio/SFX/goose.wav");
     }
 
-    // Inner class for input state management
     private class InputState {
         boolean moveLeft;
         boolean moveRight;
@@ -138,7 +125,6 @@ public abstract class Player extends GameObject {
         boolean crouch;
 
         void update() {
-            // arrow keys and WASD
             moveLeft = Keyboard.isKeyDown(MOVE_LEFT_KEY) || Keyboard.isKeyDown(Key.A);
             moveRight = Keyboard.isKeyDown(MOVE_RIGHT_KEY) || Keyboard.isKeyDown(Key.D);
             jump = Keyboard.isKeyDown(JUMP_KEY) || Keyboard.isKeyDown(Key.W);
@@ -161,26 +147,24 @@ public abstract class Player extends GameObject {
     }
 
     private void updateRunning() {
+        restoreInactiveNodesIfReady(); // Restore nodes
         inputState.update();
 
-        // Set fall through platform flag when crouching on ground
         wantsFallThroughPlatform = inputState.crouch && airGroundState == AirGroundState.GROUND;
 
         updateGrappling();
         updateJumpTimers();
         updatePhysics();
 
-        // Handle state transitions
         do {
             previousPlayerState = playerState;
             handlePlayerState();
         } while (previousPlayerState != playerState);
 
-        if (previousAirGroundState == AirGroundState.GROUND && airGroundState == AirGroundState.AIR && !jumpedIntoAir) {  // Only set coyote time if we didn't jump
+        if (previousAirGroundState == AirGroundState.GROUND && airGroundState == AirGroundState.AIR && !jumpedIntoAir) {
             coyoteTimeTimer = COYOTE_TIME_FRAMES;
         }
 
-        // Reset jump flag when landing
         if (previousAirGroundState == AirGroundState.AIR && airGroundState == AirGroundState.GROUND) {
             jumpedIntoAir = false;
             coyoteTimeTimer = 0;
@@ -188,18 +172,16 @@ public abstract class Player extends GameObject {
 
         previousAirGroundState = airGroundState;
 
-        // Calculate movement for this frame
         moveAmountX = velocityX;
         moveAmountY = velocityY;
 
-        // Move with collision detection
         lastAmountMovedX = super.moveXHandleCollision(moveAmountX);
         lastAmountMovedY = super.moveYHandleCollision(moveAmountY);
 
         handlePlayerAnimation();
         updateLockedKeys();
         super.update();
-        // if player falls below the bottom of the map, player dies
+
         if (map != null) {
             float centerY = getY() + getHeight() / 2f;
             if (centerY >= map.getHeightPixels()) {
@@ -208,22 +190,38 @@ public abstract class Player extends GameObject {
         }
     }
 
+    // visuals of inactive nodes
+    private void restoreInactiveNodesIfReady() {
+        if (map == null || inactiveNodes.isEmpty()) return;
+        long now = System.currentTimeMillis();
+        List<String> expired = new ArrayList<>();
+        for (var e : inactiveNodes.entrySet()) {
+            if (now - e.getValue() >= NODE_COOLDOWN_MS) {
+                String[] parts = e.getKey().split(",");
+                int tx = Integer.parseInt(parts[0]);
+                int ty = Integer.parseInt(parts[1]);
+
+                tx = Math.max(0, Math.min(map.getWidth() - 1, tx));
+                ty = Math.max(0, Math.min(map.getHeight() - 1, ty));
+
+                MapTile tile = map.getMapTile(tx, ty);
+                if (tile != null && tile.getTileIndex() == BITTEN_NODE_TILE_INDEX) {
+                    map.setTileIndex(tx, ty, NODE_TILE_INDEX);
+                }
+                expired.add(e.getKey());
+            }
+        }
+        for (String key : expired) inactiveNodes.remove(key);
+    }
+
     private void updateJumpTimers() {
-        if (jumpBufferTimer > 0) {
-            jumpBufferTimer--;
-        }
-        if (coyoteTimeTimer > 0) {
-            coyoteTimeTimer--;
-        }
+        if (jumpBufferTimer > 0) jumpBufferTimer--;
+        if (coyoteTimeTimer > 0) coyoteTimeTimer--;
 
-        // Track whether jump key is currently held
         isHoldingJump = inputState.jump;
-
-        // if jump is pressed, buffer the jump and lock both jump keys so the press is only counted once
         if (inputState.jump && !keyLocker.isKeyLocked(JUMP_KEY)) {
             jumpBufferTimer = JUMP_BUFFER_FRAMES;
             keyLocker.lockKey(JUMP_KEY);
-            // also lock W so releasing either will be handled consistently
             keyLocker.lockKey(Key.W);
         }
     }
@@ -235,7 +233,6 @@ public abstract class Player extends GameObject {
     }
 
     protected void applyGravity() {
-        // Apply jump canceling: if player releases jump while moving upward, cut velocity
         if (velocityY < 0 && !isHoldingJump && jumpedIntoAir) {
             velocityY *= JUMP_RELEASE_MULTIPLIER;
         }
@@ -245,41 +242,24 @@ public abstract class Player extends GameObject {
     protected void applyFriction() {
         boolean isOnGround = airGroundState == AirGroundState.GROUND;
         float currentFriction = isOnGround ? groundFriction : airFriction;
-
         if (velocityX != 0) {
-            // Apply friction opposite to the direction of movement
             float newVelocityX = velocityX - Math.signum(velocityX) * currentFriction;
-            // Prevent overshooting to the opposite direction
             boolean willCrossZero = Math.signum(newVelocityX) != Math.signum(velocityX);
-            // If it would cross zero, just set to zero
             velocityX = willCrossZero ? 0 : newVelocityX;
         }
     }
 
-    // Clamp velocities to their max values
     private void clampVelocities() {
-        // Use physics cap as absolute safety limit (much higher than run speed)
-        if (Math.abs(velocityX) > maxPhysicsSpeed) {
+        if (Math.abs(velocityX) > maxPhysicsSpeed)
             velocityX = Math.signum(velocityX) * maxPhysicsSpeed;
-        }
-        if (velocityY > maxFallSpeed) {
+        if (velocityY > maxFallSpeed)
             velocityY = maxFallSpeed;
-        }
     }
 
-    // Clean jump check that combines buffer and coyote time
     private boolean canJump() {
-        // Can't jump if we already jumped (but CAN if we just walked off!)
-        if (jumpedIntoAir) {
-            return false;
-        }
-
-        // Check if we have buffered jump input
+        if (jumpedIntoAir) return false;
         boolean hasBufferedJump = jumpBufferTimer > 0;
-
-        // Check if we can actually execute the jump
         boolean onGroundOrCoyoteTime = airGroundState == AirGroundState.GROUND || coyoteTimeTimer > 0;
-
         return hasBufferedJump && onGroundOrCoyoteTime;
     }
 
@@ -291,7 +271,6 @@ public abstract class Player extends GameObject {
         jumpBufferTimer = 0;
         coyoteTimeTimer = 0;
         playerState = PlayerState.JUMPING;
-
         currentAnimationName = getAnimationName("JUMP");
     }
 
@@ -307,14 +286,12 @@ public abstract class Player extends GameObject {
     private void applyMovementInput() {
         if (inputState.moveLeft) {
             facingDirection = Direction.LEFT;
-            // Only apply acceleration if we're under the run speed limit or moving in opposite direction
             if (velocityX > -maxRunSpeed) {
                 float acceleration = (velocityX > 0) ? horizontalAcceleration * 3.5f : horizontalAcceleration;
                 velocityX -= acceleration;
             }
         } else if (inputState.moveRight) {
             facingDirection = Direction.RIGHT;
-            // Only apply acceleration if we're under the run speed limit or moving in opposite direction
             if (velocityX < maxRunSpeed) {
                 float acceleration = (velocityX < 0) ? horizontalAcceleration * 3.5f : horizontalAcceleration;
                 velocityX += acceleration;
@@ -323,77 +300,45 @@ public abstract class Player extends GameObject {
     }
 
     protected void playerStanding() {
-        if (canJump()) {
-            executeJump();
-        }
-        else if (inputState.moveLeft || inputState.moveRight) {
-            playerState = PlayerState.WALKING;
-        }
-        else if (inputState.crouch) {
-            playerState = PlayerState.CROUCHING;
-        }
+        if (canJump()) executeJump();
+        else if (inputState.moveLeft || inputState.moveRight) playerState = PlayerState.WALKING;
+        else if (inputState.crouch) playerState = PlayerState.CROUCHING;
     }
 
     protected void playerWalking() {
-        if (canJump()) {
-            executeJump();
-        }
-        else if (!inputState.moveLeft && !inputState.moveRight) {
-            playerState = PlayerState.STANDING;
-        }
+        if (canJump()) executeJump();
+        else if (!inputState.moveLeft && !inputState.moveRight) playerState = PlayerState.STANDING;
         else {
             applyMovementInput();
-            if (inputState.crouch) {
-                playerState = PlayerState.CROUCHING;
-            }
+            if (inputState.crouch) playerState = PlayerState.CROUCHING;
         }
     }
 
     protected void playerCrouching() {
-        // Apply extra friction when crouching
         velocityX *= CROUCH_FRICTION_MULTIPLIER;
-
-        if (canJump()) {
-            executeJump();
-        }
-        else if (!inputState.crouch) {
-            playerState = PlayerState.STANDING;
-        }
+        if (canJump()) executeJump();
+        else if (!inputState.crouch) playerState = PlayerState.STANDING;
     }
 
     protected void playerJumping() {
-        // Handle air movement AND check for coyote time jumps
         if (airGroundState == AirGroundState.AIR) {
             applyMovementInput();
-
-            // Check for coyote time jump while falling!
-            if (canJump()) {
-                executeJump();  // This will use up the coyote time
-            }
-        }
-        // Handle landing
-        else if (airGroundState == AirGroundState.GROUND) {
-            // Just landed so check for buffered jump
-            if (canJump()) {
-                executeJump();
-            } else {
-                playerState = PlayerState.STANDING;
-            }
+            if (canJump()) executeJump();
+        } else if (airGroundState == AirGroundState.GROUND) {
+            if (canJump()) executeJump();
+            else playerState = PlayerState.STANDING;
         }
     }
 
     protected void updateLockedKeys() {
-        // unlock jump keys only when both UP and W are released
         if (Keyboard.isKeyUp(JUMP_KEY) && Keyboard.isKeyUp(Key.W)) {
             keyLocker.unlockKey(JUMP_KEY);
             keyLocker.unlockKey(Key.W);
         }
-        // NODE-GRAPPLE: unlock X and N keys when both released
         if (Keyboard.isKeyUp(NODE_KEY) && Keyboard.isKeyUp(Key.N)) {
             keyLocker.unlockKey(NODE_KEY);
             keyLocker.unlockKey(Key.N);
         }
-        // HONK: unlock Z and M keys when both released
         if (Keyboard.isKeyUp(HONK_KEY) && Keyboard.isKeyUp(Key.M)) {
             keyLocker.unlockKey(HONK_KEY);
             keyLocker.unlockKey(Key.M);
@@ -473,9 +418,10 @@ public abstract class Player extends GameObject {
         if (grappleAnimationState == GrappleAnimationState.NONE && !keyLocker.isKeyLocked(NODE_KEY) && !keyLocker.isKeyLocked(Key.N)
                 && (Keyboard.isKeyDown(NODE_KEY) || Keyboard.isKeyDown(Key.N))) {
             Point anchor = findNearestNodeAnchorWithRaycast(getCenterX(), getCenterY(), NODE_RADIUS);
+
             if (anchor != null) {
                 startGrappleExtension(anchor);
-                // lock both possible node keys so holding either doesn't retrigger
+                // lock both possible node keys
                 keyLocker.lockKey(NODE_KEY);
                 keyLocker.lockKey(Key.N);
             }
@@ -588,9 +534,40 @@ public abstract class Player extends GameObject {
         releaseGrappleInternal(true);
     }
 
+    // form tile key 
+    private String tileKey(int tx, int ty) {
+        return tx + "," + ty;
+    }
+
+    // mark node inactive 
+    private void markNodeInactiveByWorldPoint(Point worldPoint) {
+        if (map == null || worldPoint == null) return;
+        Point idx = map.getTileIndexByPosition(worldPoint.x, worldPoint.y);
+        if (idx == null) return;
+
+        int tx = Math.round(idx.x);
+        int ty = Math.round(idx.y);
+        tx = Math.max(0, Math.min(map.getWidth() - 1, tx));
+        ty = Math.max(0, Math.min(map.getHeight() - 1, ty));
+
+        inactiveNodes.put(tileKey(tx, ty), System.currentTimeMillis());
+
+        // visually switch to bitten tile 
+        MapTile tile = map.getMapTile(tx, ty);
+        if (tile != null && tile.getTileIndex() == NODE_TILE_INDEX) {
+            map.setTileIndex(tx, ty, BITTEN_NODE_TILE_INDEX);
+        }
+    }
+
+
     private void releaseGrappleInternal(boolean shouldJump) {
         if (grappleAnimationState == GrappleAnimationState.NONE || grappleAnimationState == GrappleAnimationState.RETRACTING) {
             return;
+        }
+
+        // Mark node inactive by tile index 
+        if (grappleTarget != null) {
+            markNodeInactiveByWorldPoint(grappleTarget);
         }
 
         if (grappleAnimationState == GrappleAnimationState.EXTENDING) {
@@ -658,7 +635,32 @@ public abstract class Player extends GameObject {
                 MapTile tile = map.getMapTile(tx, ty);
                 if (tile == null) continue;
 
-                if (tile.getTileIndex() == NODE_TILE_INDEX) {
+                // active and bitten bread tiles for cooldown 
+                int tileIdx = tile.getTileIndex();
+                if (tileIdx == NODE_TILE_INDEX || tileIdx == BITTEN_NODE_TILE_INDEX) {
+                    // check cooldown
+                    String key = tileKey(tx, ty);
+                    if (inactiveNodes.containsKey(key)) {
+                        long timeSince = System.currentTimeMillis() - inactiveNodes.get(key);
+                        if (timeSince < NODE_COOLDOWN_MS) {
+                            if (tile.getTileIndex() != BITTEN_NODE_TILE_INDEX) {
+                                map.setTileIndex(tx, ty, BITTEN_NODE_TILE_INDEX);
+                            }
+                            continue; 
+                        } else {
+                            // cooldown expire
+                            inactiveNodes.remove(key);
+                            if (map.getMapTile(tx, ty) != null && map.getMapTile(tx, ty).getTileIndex() == BITTEN_NODE_TILE_INDEX) {
+                                map.setTileIndex(tx, ty, NODE_TILE_INDEX);
+                            }
+                        }
+                    }
+
+                    // Only add active nodes (not bitten)
+                    if (map.getMapTile(tx, ty).getTileIndex() != NODE_TILE_INDEX) {
+                        continue;
+                    }
+
                     float ax = tile.getX() + tile.getWidth() / 2f;
                     float ay = tile.getY() + tile.getHeight() / 2f;
                     float ddx = ax - px;
