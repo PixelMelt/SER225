@@ -29,7 +29,7 @@ public class EvilGoose extends NPC {
         // Setup dialogue sequence
         dialogueSequence = new Level.DialogueSequence();
         dialogueSequence.addMessage("You have forsaken us brother.", npcPortrait);
-        dialogueSequence.addMessage("It is I how is the choosen one.", playerPortrait);
+        dialogueSequence.addMessage("I have choosen the path of the goose.", playerPortrait);
         dialogueSequence.addMessage("Our breadtheren will come for you.", npcPortrait);
         dialogueSequence.addMessage("*waddles away smugly*", playerPortrait);
     }

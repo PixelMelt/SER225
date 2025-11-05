@@ -19,6 +19,21 @@
       "id": 3,
       "name": "Fourth Map",
       "className": "FourthMap"
+    },
+    {
+      "id": 4,
+      "name": "Fifth Map",
+      "className": "FifthMap"
+    },
+    {
+      "id": 5,
+      "name": "Sixth Map",
+      "className": "SixthMap"
+    },
+    {
+      "id": 6,
+      "name": "Seventh Map",
+      "className": "SeventhMap"
     }
   ]
 }
