@@ -1,6 +1,7 @@
 package Maps;
 
 import Engine.ImageLoader;
+import EnhancedMapTiles.BreakBox;
 import EnhancedMapTiles.Buzzsaw;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.HorizontalMovingPlatform;
@@ -133,6 +134,19 @@ public class TestMap extends Map {
         if (buzz12 != null && buzz12.getTileType() == TileType.PASSABLE) {
             enhancedMapTiles.add(new Buzzsaw(buzz12.getLocation()));
         }
+
+        BreakBox breakBox1 = new BreakBox(getMapTile(10, 16).getLocation());
+        enhancedMapTiles.add(breakBox1);
+
+        BreakBox breakBox2 = new BreakBox(getMapTile(24, 10).getLocation());
+        enhancedMapTiles.add(breakBox2);
+
+        BreakBox breakBox3 = new BreakBox(getMapTile(35, 11).getLocation());
+        enhancedMapTiles.add(breakBox3);
+
+        BreakBox breakBox4 = new BreakBox(getMapTile(50, 14).getLocation());
+        enhancedMapTiles.add(breakBox4);
+
         return enhancedMapTiles;
     }
 

@@ -3,7 +3,6 @@ package Level;
 import Engine.Key;
 import Engine.KeyLocker;
 import Engine.Keyboard;
-import Engine.Mouse;
 import GameObject.Frame;
 import GameObject.GameObject;
 import GameObject.ImageEffect;
@@ -13,9 +12,9 @@ import Utils.Direction;
 import Utils.Point;
 import Utils.SoundController;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 public abstract class Player extends GameObject {
     // Death animation timer
@@ -879,5 +878,9 @@ public abstract class Player extends GameObject {
     // horoizontal velocity getter
     public float getVelocityX() {
         return velocityX;
+    }
+
+    public float getVelocityY() {
+        return velocityY;
     }
 }
