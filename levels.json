@@ -2,36 +2,41 @@
   "levels": [
     {
       "id": 0,
+      "name": "Tutorial Map",
+      "className": "TutorialMap"
+    },
+    {
+      "id": 1,
       "name": "Test Map",
       "className": "TestMap"
     },
     {
-      "id": 1,
+      "id": 2,
       "name": "Second Map",
       "className": "SecondMap"
     },
     {
-      "id": 2,
+      "id": 3,
       "name": "Third Map",
       "className": "ThirdMap"
     },
     {
-      "id": 3,
+      "id": 4,
       "name": "Fourth Map",
       "className": "FourthMap"
     },
     {
-      "id": 4,
+      "id": 5,
       "name": "Fifth Map",
       "className": "FifthMap"
     },
     {
-      "id": 5,
+      "id": 6,
       "name": "Sixth Map",
       "className": "SixthMap"
     },
     {
-      "id": 6,
+      "id": 7,
       "name": "Seventh Map",
       "className": "SeventhMap"
     }
