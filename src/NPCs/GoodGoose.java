@@ -48,13 +48,13 @@ public class GoodGoose extends NPC {
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
         return new HashMap<String, Frame[]>() {{
-           put("Smile", new Frame[] {
+           put("Goose", new Frame[] {
                    new FrameBuilder(spriteSheet.getSprite(0, 0))
                            .withScale(4)
                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
                            .build()
            });
-            put("Frown", new Frame[] {
+            put("Goose1", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(1, 0))
                             .withScale(4)
                             .withImageEffect(ImageEffect.FLIP_HORIZONTAL)

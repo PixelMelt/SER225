@@ -4,7 +4,7 @@ import Engine.GraphicsHandler;
 import EnhancedMapTiles.Buzzsaw;
 import EnhancedMapTiles.EndLevelBox;
 import Level.*;
-import NPCs.Walrus;
+import NPCs.GoodGoose;
 import Tilesets.CommonTileset;
 import Utils.Point;
 import java.awt.Color;
@@ -67,11 +67,8 @@ public class TutorialMap extends Map {
     public ArrayList<NPC> loadNPCs() {
         ArrayList<NPC> npcs = new ArrayList<>();
 
-        MapTile walrusTile = safeGetMapTile(40, 11);
-        if (walrusTile != null) {
-            Walrus walrus = new Walrus(walrusTile.getLocation().subtractY(13));
-            npcs.add(walrus);
-        }
+        GoodGoose goose = new GoodGoose(getMapTile(40, 11).getLocation().subtractY(35));
+        npcs.add(goose);
 
         return npcs;
     }
