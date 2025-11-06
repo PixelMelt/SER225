@@ -20,7 +20,7 @@ public class SixthMap extends Map {
     public ArrayList<EnhancedMapTile> loadEnhancedMapTiles() {
         ArrayList<EnhancedMapTile> enhancedMapTiles = new ArrayList<>();
 
-        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(247, 45).getLocation());
+        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(202, 45).getLocation());
         enhancedMapTiles.add(endLevelBox);
         
         // add spikes
@@ -31,10 +31,32 @@ public class SixthMap extends Map {
                 enhancedMapTiles.add(spikeG);
             }
         }
-        
-        int[][] floatingSpikes = {{13, 43}, {14, 43}, {15, 43}, {16, 43}, {17, 43}, {18, 43}, {19, 43}, {20, 43}, {21, 43}};
-        for (int[] fs : floatingSpikes) {
-            MapTile t = getMapTile(fs[0], fs[1]);
+
+        for (int i = 121; i <= 149; i++) {
+            MapTile t = getMapTile(i, 48);
+            if (t != null && t.getTileType() == TileType.PASSABLE) {
+                Spike spikeG = new Spike(t.getLocation());
+                enhancedMapTiles.add(spikeG);
+            }
+        }
+
+        for (int i = 185; i <= 185; i++) {
+            MapTile t = getMapTile(i, 49);
+            if (t != null && t.getTileType() == TileType.PASSABLE) {
+                Spike spikeG = new Spike(t.getLocation());
+                enhancedMapTiles.add(spikeG);
+            }
+        }
+
+        for (int i = 13; i <= 21; i++) {
+            MapTile t = getMapTile(i, 43);
+            if (t != null && t.getTileType() == TileType.PASSABLE) {
+                Spike s = new Spike(t.getLocation(), true);
+                enhancedMapTiles.add(s);
+            }
+        }
+        for (int i = 75; i <= 108; i++) {
+            MapTile t = getMapTile(i, 41);
             if (t != null && t.getTileType() == TileType.PASSABLE) {
                 Spike s = new Spike(t.getLocation(), true);
                 enhancedMapTiles.add(s);
@@ -99,6 +121,62 @@ public class SixthMap extends Map {
         if (buzz12 != null && buzz12.getTileType() == TileType.PASSABLE) {
             enhancedMapTiles.add(new Buzzsaw(buzz12.getLocation()));
         }
+        MapTile buzz13 = getMapTile(58, 39);
+        if (buzz13 != null && buzz12.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz13.getLocation()));
+        }
+        MapTile buzz14 = getMapTile(56, 35);
+        if (buzz14 != null && buzz14.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz14.getLocation())); 
+        }
+        MapTile buzz15 = getMapTile(58, 32);
+        if (buzz15 != null && buzz15.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz15.getLocation())); 
+        }
+        MapTile buzz16 = getMapTile(58, 25);
+        if (buzz16 != null && buzz16.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz16.getLocation()));
+        }
+        MapTile buzz17 = getMapTile(56, 21);
+        if (buzz17 != null && buzz17.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz17.getLocation()));
+        }
+        MapTile buzz18 = getMapTile(79, 45);
+        if (buzz18 != null && buzz18.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz18.getLocation()));
+        }
+        MapTile buzz19 = getMapTile(85, 45);
+        if (buzz19 != null && buzz19.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz19.getLocation()));
+        }
+        MapTile buzz20 = getMapTile(91, 47);
+        if (buzz20 != null && buzz20.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz20.getLocation()));
+        }
+        MapTile buzz21 = getMapTile(100, 45);
+        if (buzz21 != null && buzz21.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz21.getLocation()));
+        }
+        MapTile buzz22 = getMapTile(107, 47);
+        if (buzz22 != null && buzz22.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz22.getLocation()));
+        }
+        MapTile buzz23 = getMapTile(123, 44);
+        if (buzz23 != null && buzz23.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz23.getLocation()));
+        }
+        MapTile buzz24 = getMapTile(130, 46);
+        if (buzz24 != null && buzz24.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz24.getLocation()));
+        }
+        MapTile buzz25 = getMapTile(139, 46);
+        if (buzz25 != null && buzz25.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz25.getLocation()));
+        }
+        MapTile buzz26 = getMapTile(146, 44);
+        if (buzz26 != null && buzz26.getTileType() == TileType.PASSABLE) {
+            enhancedMapTiles.add(new Buzzsaw(buzz26.getLocation()));
+        }
     }
         return enhancedMapTiles;
 }
@@ -108,7 +186,7 @@ public class SixthMap extends Map {
     public ArrayList<NPC> loadNPCs() {
         ArrayList<NPC> npcs = new ArrayList<>();
 
-        EvilGoose Egoose = new EvilGoose(getMapTile(127, 47).getLocation().subtractY(13));
+        EvilGoose Egoose = new EvilGoose(getMapTile(19, 41).getLocation().subtractY(13));
         npcs.add(Egoose);
 
         return npcs;
