@@ -3,7 +3,7 @@ package Maps;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.Spike;
 import Level.*;
-import NPCs.BreadPC;
+import NPCs.EvilGoose;
 import Tilesets.CommonTileset;
 import java.util.ArrayList;
 
@@ -32,18 +32,22 @@ public class SeventhMap extends Map {
             enhancedMapTiles.add(spike1);
         }
 
+        for(int i = 9; i < 49; i++){
+            Spike spike1 = new Spike(getMapTile(i, 25).getLocation());
+            enhancedMapTiles.add(spike1);
+        }
+
         return enhancedMapTiles;
     }
 
-    /*
+    
     @Override
     public ArrayList<NPC> loadNPCs() {
         ArrayList<NPC> npcs = new ArrayList<>();
 
-        Walrus walrus = new Walrus(getMapTile(28, 18).getLocation().subtractY(13));
-        npcs.add(walrus);
+        EvilGoose esoog = new EvilGoose(getMapTile(101, 34).getLocation().subtractY(35));
+        npcs.add(esoog);
 
         return npcs;
     }
-    */
 }

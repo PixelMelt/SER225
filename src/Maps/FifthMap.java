@@ -3,7 +3,7 @@ package Maps;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.Spike;
 import Level.*;
-import NPCs.EvilGoose;
+import NPCs.BreadGoose;
 import Tilesets.CommonTileset;
 import java.util.ArrayList;
 
@@ -54,8 +54,8 @@ public class FifthMap extends Map {
     public ArrayList<NPC> loadNPCs() {
         ArrayList<NPC> npcs = new ArrayList<>();
 
-        EvilGoose Egoose = new EvilGoose(getMapTile(127, 47).getLocation().subtractY(35));
-        npcs.add(Egoose);
+        BreadGoose gread = new BreadGoose(getMapTile(127, 47).getLocation().subtractY(35));
+        npcs.add(gread);
 
         return npcs;
     }

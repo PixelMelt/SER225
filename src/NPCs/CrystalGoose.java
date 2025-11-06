@@ -11,36 +11,34 @@ import Utils.Point;
 import java.util.HashMap;
 
 // This class is for the Duck
-public class Duck extends NPC {
+public class CrystalGoose extends NPC {
 
-    public Duck(Point location) {
-        super(location.x, location.y, new SpriteSheet(ImageLoader.load("Duck.png"), 24, 24), "Stare");
+    public CrystalGoose(Point location) {
+        super(location.x, location.y, new SpriteSheet(ImageLoader.load("CrystalGoose.png"), 24, 24), "closed");
         isInteractable = true;
 
         // Get portrait frames
         Frame npcPortrait = getPortraitFrame();
         SpriteSheet playerSheet = new SpriteSheet(ImageLoader.load("Cat.png"), 24, 24);
         Frame playerPortrait = new Builders.FrameBuilder(playerSheet.getSprite(0, 0))
-                .withScale(3)
+                .withScale(1)
                 .withBounds(3, 3, 17, 19)
                 .build();
 
         // Setup dialogue sequence
         dialogueSequence = new Level.DialogueSequence();
-        dialogueSequence.addMessage("What do you call a goose detective?", npcPortrait);
-        dialogueSequence.addMessage("Hmm... no idea.", playerPortrait);
-        dialogueSequence.addMessage("Sherlock Honks!", npcPortrait);
-        dialogueSequence.addMessage("You know im not sure why I exptected\nbetter then that.", playerPortrait);
-        dialogueSequence.addMessage("You try coming up with a coherant\ngoose joke then.", npcPortrait);
-        dialogueSequence.addMessage("Fair enough.", playerPortrait);
+        dialogueSequence.addMessage("Welcome, I predict you will have a crumby time", npcPortrait);
+        dialogueSequence.addMessage("You must be a duck psychic, don't bread me mind.", playerPortrait);
+        dialogueSequence.addMessage("I promise I won't.", npcPortrait);
+        dialogueSequence.addMessage("*waddles backwards, wings covering ears*", playerPortrait);
     }
 
     public void update(Player player) {
         // while npc is being talked to, it does an eye roll
         if (isInDialogue) {
-            currentAnimationName = "EyeRoll";
+            currentAnimationName = "closed";
         } else {
-            currentAnimationName = "Stare";
+            currentAnimationName = "open";
         }
 
         super.update(player);
@@ -49,12 +47,12 @@ public class Duck extends NPC {
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
         return new HashMap<String, Frame[]>() {{
-           put("Stare", new Frame[] {
+           put("closed", new Frame[] {
                    new FrameBuilder(spriteSheet.getSprite(0, 0))
                            .withScale(4)
                            .build()
            });
-            put("EyeRoll", new Frame[] {
+            put("open", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(1, 0))
                             .withScale(4)
                             .build()

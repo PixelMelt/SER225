@@ -11,7 +11,7 @@ import Level.Player;
 import Utils.Point;
 import java.util.HashMap;
 
-// This class is for the BREADPC
+// This class is for the esoog (Egoose)
 public class EvilGoose extends NPC {
 
     public EvilGoose(Point location) {

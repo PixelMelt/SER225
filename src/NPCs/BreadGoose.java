@@ -4,17 +4,18 @@ import Builders.FrameBuilder;
 import Engine.GraphicsHandler;
 import Engine.ImageLoader;
 import GameObject.Frame;
+import GameObject.ImageEffect;
 import GameObject.SpriteSheet;
 import Level.NPC;
 import Level.Player;
 import Utils.Point;
 import java.util.HashMap;
 
-// This class is for the Duck
-public class Duck extends NPC {
+// This class is for the esoog (Egoose)
+public class BreadGoose extends NPC {
 
-    public Duck(Point location) {
-        super(location.x, location.y, new SpriteSheet(ImageLoader.load("Duck.png"), 24, 24), "Stare");
+    public BreadGoose(Point location) {
+        super(location.x, location.y, new SpriteSheet(ImageLoader.load("BreadGoose.png"), 24, 24), "Goose");
         isInteractable = true;
 
         // Get portrait frames
@@ -27,20 +28,18 @@ public class Duck extends NPC {
 
         // Setup dialogue sequence
         dialogueSequence = new Level.DialogueSequence();
-        dialogueSequence.addMessage("What do you call a goose detective?", npcPortrait);
-        dialogueSequence.addMessage("Hmm... no idea.", playerPortrait);
-        dialogueSequence.addMessage("Sherlock Honks!", npcPortrait);
-        dialogueSequence.addMessage("You know im not sure why I exptected\nbetter then that.", playerPortrait);
-        dialogueSequence.addMessage("You try coming up with a coherant\ngoose joke then.", npcPortrait);
-        dialogueSequence.addMessage("Fair enough.", playerPortrait);
+        dialogueSequence.addMessage("Bready or not, here I crumb.", npcPortrait);
+        dialogueSequence.addMessage("No, cousin Gread. You were banished for being to bready.", playerPortrait);
+        dialogueSequence.addMessage("But I risen for just this occasion.", npcPortrait);
+        dialogueSequence.addMessage("No. *points wing and waddles away*", playerPortrait);
     }
 
     public void update(Player player) {
-        // while npc is being talked to, it does an eye roll
+        // while npc is being talked to, it frowns
         if (isInDialogue) {
-            currentAnimationName = "EyeRoll";
+            currentAnimationName = "Goose";
         } else {
-            currentAnimationName = "Stare";
+            currentAnimationName = "Goose1";
         }
 
         super.update(player);
@@ -49,14 +48,16 @@ public class Duck extends NPC {
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
         return new HashMap<String, Frame[]>() {{
-           put("Stare", new Frame[] {
+           put("Goose", new Frame[] {
                    new FrameBuilder(spriteSheet.getSprite(0, 0))
                            .withScale(4)
+                           .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
                            .build()
            });
-            put("EyeRoll", new Frame[] {
+            put("Goose1", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(1, 0))
                             .withScale(4)
+                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
                             .build()
             });
         }};

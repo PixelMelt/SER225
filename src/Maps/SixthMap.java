@@ -4,7 +4,7 @@ import EnhancedMapTiles.Buzzsaw;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.Spike;
 import Level.*;
-import NPCs.EvilGoose;
+import NPCs.CrystalGoose;
 import Tilesets.CommonTileset;
 import java.util.ArrayList;
 
@@ -186,7 +186,7 @@ public class SixthMap extends Map {
     public ArrayList<NPC> loadNPCs() {
         ArrayList<NPC> npcs = new ArrayList<>();
 
-        EvilGoose Egoose = new EvilGoose(getMapTile(19, 41).getLocation().subtractY(13));
+        CrystalGoose Egoose = new CrystalGoose(getMapTile(19, 41).getLocation().subtractY(35));
         npcs.add(Egoose);
 
         return npcs;
