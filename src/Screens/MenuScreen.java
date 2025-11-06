@@ -122,8 +122,8 @@ public class MenuScreen extends Screen {
             menuItemSelected = currentMenuItemHovered;
             switch (menuItemSelected) {
                 case 0 -> {
-                    // Play Game - start from TestMap (level 0)
-                    screenCoordinator.setSelectedLevel(0, "TestMap");
+                    // Play Game - start from TutorialMap (level 0)
+                    screenCoordinator.setSelectedLevel(0, "TutorialMap");
                     screenCoordinator.setGameState(GameState.LEVEL);
                 }
                 case 1 -> screenCoordinator.setGameState(GameState.LEVEL_SELECT);

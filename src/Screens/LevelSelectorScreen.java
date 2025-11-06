@@ -148,10 +148,11 @@ public class LevelSelectorScreen extends Screen {
      * Fallback if levels.json is missing or invalid
      */
     private void createDefaultLevels() {
-        levels.add(new LevelInfo(0, "Test Map", "TestMap"));
-        levels.add(new LevelInfo(1, "Second Map", "SecondMap"));
-        levels.add(new LevelInfo(2, "Third Map", "ThirdMap"));
-        levels.add(new LevelInfo(3, "Fourth Map", "FourthMap"));
+        levels.add(new LevelInfo(0, "Tutorial Map", "TutorialMap"));
+        levels.add(new LevelInfo(1, "Test Map", "TestMap"));
+        levels.add(new LevelInfo(2, "Second Map", "SecondMap"));
+        levels.add(new LevelInfo(3, "Third Map", "ThirdMap"));
+        levels.add(new LevelInfo(4, "Fourth Map", "FourthMap"));
     }
 
     @Override

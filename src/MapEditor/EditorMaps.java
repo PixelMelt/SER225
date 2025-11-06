@@ -5,6 +5,7 @@ import Maps.FifthMap;
 import Maps.FourthMap;
 import Maps.SecondMap;
 import Maps.TestMap;
+import Maps.TutorialMap;
 import Maps.ThirdMap;
 import Maps.SeventhMap;
 import Maps.SixthMap;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 public class EditorMaps {
     public static ArrayList<String> getMapNames() {
         return new ArrayList<String>() {{
+            add("TutorialMap");
             add("TestMap");
             add("TitleScreen");
             add("SecondMap");
@@ -27,6 +29,8 @@ public class EditorMaps {
 
     public static Map getMapByName(String mapName) {
         switch(mapName) {
+            case "TutorialMap":
+                return new TutorialMap();
             case "TestMap":
                 return new TestMap();
             case "TitleScreen":
