@@ -54,12 +54,12 @@ public class Buzzsaw extends EnhancedMapTile {
             int rTip = 18; // teeth radius 
 
             // draw main gray body
-            g.setColor(new Color(170, 170, 170));
+            g.setColor(new Color(255, 0, 0));
             g.fillOval(cx - rInner, cy - rInner, rInner * 2, rInner * 2);
 
             // draw triangular teeth around circle
             int teeth = 12;
-            g.setColor(new Color(110, 110, 110));
+            // g.setColor(new Color(110, 110, 110));
             for (int i = 0; i < teeth; i++) {
                 double angle = (i * 2 * Math.PI / teeth) + (rotateStep * (Math.PI * 2 / (teeth * 8)));
                 double mid = angle;
@@ -79,12 +79,12 @@ public class Buzzsaw extends EnhancedMapTile {
             }
 
             // draw outer stroke
-            g.setColor(new Color(80, 80, 80));
-            g.setStroke(new BasicStroke(1f));
-            g.drawOval(cx - rInner, cy - rInner, rInner * 2, rInner * 2);
+            // g.setColor(new Color(80, 80, 80));
+            // g.setStroke(new BasicStroke(1f));
+            // g.drawOval(cx - rInner, cy - rInner, rInner * 2, rInner * 2);
 
             // inner part
-            g.setColor(new Color(100, 100, 100));
+            g.setColor(new Color(255,255,255));
             g.fillOval(cx - 2, cy - 2, 4, 4);
 
         } finally {

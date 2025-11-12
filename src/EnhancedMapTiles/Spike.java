@@ -45,7 +45,7 @@ public class Spike extends EnhancedMapTile {
             g.fillRect(0, 0, size, size);
             g.setComposite(AlphaComposite.SrcOver);
             // three spikes
-            g.setColor(new Color(200, 50, 50));
+            g.setColor(new Color(255, 0, 0));
             int peakY = 2;
             int baseY = size - 1; // draw the spike bases at the bottom of the image
             int spikeWidth = size / 3;
@@ -57,15 +57,9 @@ public class Spike extends EnhancedMapTile {
                 int[] ys = new int[] { baseY, peakY, baseY };
                 g.fillPolygon(xs, ys, 3);
                 // outline
-                g.setColor(Color.BLACK);
+                // g.setColor(Color.BLACK);
                 g.drawPolygon(xs, ys, 3);
-                g.setColor(new Color(200, 50, 50));
             }
-
-            // small highlight
-            g.setColor(new Color(255, 120, 120, 120));
-            int hlY = Math.max(0, baseY - 5);
-            g.fillRect(2, hlY, 3, 3);
         } finally {
             g.dispose();
         }
