@@ -30,8 +30,8 @@ public class GoodGoose extends NPC {
         dialogueSequence = new Level.DialogueSequence();
         dialogueSequence.addMessage("You have done well Sir Honk-a-lots.", npcPortrait);
         dialogueSequence.addMessage("What is it you visit me for?", playerPortrait);
-        dialogueSequence.addMessage("To take this bread as it is not safe to go alone.", npcPortrait);
-        dialogueSequence.addMessage("I'll pass. *waddles away, waddle waddle*", playerPortrait);
+        dialogueSequence.addMessage("It is dangerous to go alone.... Take this bread.", npcPortrait);
+        dialogueSequence.addMessage("I don't want naan of that. *waddles away, waddle waddle*", playerPortrait);
     }
 
     public void update(Player player) {

@@ -8,7 +8,6 @@ import GameObject.ImageEffect;
 import Level.TileType;
 import Level.Tileset;
 import Utils.SlopeTileLayoutUtils;
-
 import java.util.ArrayList;
 
 // This class represents a "common" tileset of standard tiles defined in the CommonTileset.png file
@@ -39,12 +38,12 @@ public class CommonTileset extends Tileset {
                 .build();
         mapTiles.add(new MapTileBuilder(skyFrame));
 
-        // 2: dirt
+        // 2: bread flies
         Frame dirtFrame = new FrameBuilder(getSubImage(0, 2))
                 .withScale(tileScale)
                 .build();
         mapTiles.add(new MapTileBuilder(dirtFrame)
-                .withTileType(TileType.NOT_PASSABLE));
+                .withTileType(TileType.PASSABLE));
 
         // 3: bread active (grappling node)
         breadActiveFrame = new FrameBuilder(getSubImage(2, 0))

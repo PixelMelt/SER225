@@ -31,7 +31,7 @@ public class BreadGoose extends NPC {
         dialogueSequence.addMessage("Bready or not, here I crumb.", npcPortrait);
         dialogueSequence.addMessage("No, cousin Gread. You were banished for being to bready.", playerPortrait);
         dialogueSequence.addMessage("But I risen for just this occasion.", npcPortrait);
-        dialogueSequence.addMessage("No. *points wing and waddles away*", playerPortrait);
+        dialogueSequence.addMessage("No. *points wing and waddles away*\nCiabatta stay away from me.", playerPortrait);
     }
 
     public void update(Player player) {

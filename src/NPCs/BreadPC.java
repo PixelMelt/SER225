@@ -28,10 +28,10 @@ public class BreadPC extends NPC {
 
         // Setup dialogue sequence
         dialogueSequence = new Level.DialogueSequence();
-        dialogueSequence.addMessage("Oh! Hello there!", npcPortrait);
+        dialogueSequence.addMessage("Oh! Gluten tag!", npcPortrait);
         dialogueSequence.addMessage("Hey there.", playerPortrait);
         dialogueSequence.addMessage("Why? WHY?? WHYYY???\nwHy WOuld you eat me?", npcPortrait);
-        dialogueSequence.addMessage("Yummers.", playerPortrait);
+        dialogueSequence.addMessage("Yummers.\nI'm feeling bready for anything now.", playerPortrait);
     }
 
     public void update(Player player) {

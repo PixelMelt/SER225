@@ -29,8 +29,8 @@ public class CrystalGoose extends NPC {
         dialogueSequence = new Level.DialogueSequence();
         dialogueSequence.addMessage("Welcome, I predict you will have a crumby time", npcPortrait);
         dialogueSequence.addMessage("You must be a duck psychic, don't bread me mind.", playerPortrait);
-        dialogueSequence.addMessage("I promise I won't.", npcPortrait);
-        dialogueSequence.addMessage("*waddles backwards, wings covering ears*", playerPortrait);
+        dialogueSequence.addMessage("You can crust me not to.", npcPortrait);
+        dialogueSequence.addMessage("*waddles backwards, wings covering ears. honking in bad bread puns*", playerPortrait);
     }
 
     public void update(Player player) {

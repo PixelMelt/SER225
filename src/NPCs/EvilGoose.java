@@ -31,7 +31,7 @@ public class EvilGoose extends NPC {
         dialogueSequence.addMessage("You have forsaken us brother.", npcPortrait);
         dialogueSequence.addMessage("I have choosen the path of the goose.", playerPortrait);
         dialogueSequence.addMessage("Our breadtheren will come for you.", npcPortrait);
-        dialogueSequence.addMessage("*waddles away smugly*", playerPortrait);
+        dialogueSequence.addMessage("I'll toast them if I have to. *waddles away smugly*", playerPortrait);
     }
 
     public void update(Player player) {
