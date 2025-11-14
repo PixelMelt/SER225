@@ -38,7 +38,14 @@
     {
       "id": 7,
       "name": "Seventh Map",
-      "className": "SeventhMap"
+      "className": "SeventhMap"    
+    
+    },
+    {
+      "id": 9,
+      "name": "Ninth Map",
+      "className": "NinthMap"    
+    
     }
   ]
 }
