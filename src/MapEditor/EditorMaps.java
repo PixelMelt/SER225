@@ -9,6 +9,7 @@ import Maps.TutorialMap;
 import Maps.ThirdMap;
 import Maps.SeventhMap;
 import Maps.SixthMap;
+import Maps.NinthMap;
 import Maps.TitleScreenMap;
 import java.util.ArrayList;
 
@@ -24,6 +25,7 @@ public class EditorMaps {
             add("FifthMap");
             add("SixthMap");
             add("SeventhMap");
+            add("NinthMap");
         }};
     }
 
@@ -47,6 +49,8 @@ public class EditorMaps {
                 return new SixthMap();
             case "SeventhMap":
                 return new SeventhMap();
+            case "NinthMap":
+                return new NinthMap();
             default:
                 throw new RuntimeException("Unrecognized map name");
         }
