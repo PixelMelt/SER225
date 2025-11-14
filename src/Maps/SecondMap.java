@@ -1,6 +1,8 @@
 package Maps;
 
+import Engine.Config;
 import Engine.ImageLoader;
+import EnhancedMapTiles.BreakBox;
 import EnhancedMapTiles.Buzzsaw;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.HorizontalMovingPlatform;
@@ -55,14 +57,12 @@ public class SecondMap extends Map {
                 MapTile tile = getMapTile(x, y);
                 if (tile != null && tile.getTileIndex() == 16) {
                     enhancedMapTiles.add(new Spike(tile.getLocation()));
-                    // replace tile 16 with tile -1 to hide it from rendering
-                    setTileIndex(x, y, -1);
+                    if (!Config.IS_EDITOR_MODE) {
+                        setTileIndex(x, y, -1);
+                    }
                 }
             }
         }
-
-        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(97, 13).getLocation());
-        enhancedMapTiles.add(endLevelBox);
 
         // add buzzsaws
         for (int y = 0; y < getHeight(); y++) {
@@ -70,11 +70,28 @@ public class SecondMap extends Map {
                 MapTile tile = getMapTile(x, y);
                 if (tile != null && tile.getTileIndex() == 15) {
                     enhancedMapTiles.add(new Buzzsaw(tile.getLocation()));
-                    // replace tile 15 with tile -1 to hide it from rendering
-                    setTileIndex(x, y, -1);
+                    if (!Config.IS_EDITOR_MODE) {
+                        setTileIndex(x, y, -1);
+                    }
                 }
             }
         }
+
+        // add breakboxes
+        for (int y = 0; y < getHeight(); y++) {
+            for (int x = 0; x < getWidth(); x++) {
+                MapTile tile = getMapTile(x, y);
+                if (tile != null && tile.getTileIndex() == 14) {
+                    enhancedMapTiles.add(new BreakBox(tile.getLocation()));
+                    if (!Config.IS_EDITOR_MODE) {
+                        setTileIndex(x, y, -1);
+                    }
+                }
+            }
+        }
+
+        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(97, 13).getLocation());
+        enhancedMapTiles.add(endLevelBox);
 
         return enhancedMapTiles;
     }

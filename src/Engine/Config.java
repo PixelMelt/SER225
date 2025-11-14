@@ -23,6 +23,9 @@ public class Config {
     // MAX_PERFORMANCE will have the game do whatever it takes to reach the target FPS, even if that means hogging the CPU
     public static final GameLoopType GAME_LOOP_TYPE = GameLoopType.POWER_SAVER;
 
+    // Flag to track whether we're in the map editor
+    public static boolean IS_EDITOR_MODE = false;
+
     // prevents Config from being instantiated
     private Config() { }
 }
