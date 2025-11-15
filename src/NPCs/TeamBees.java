@@ -11,11 +11,11 @@ import Level.Player;
 import Utils.Point;
 import java.util.HashMap;
 
-// This class is for the BreadGoose (Cousin Gread)
-public class BreadGoose extends NPC {
+// This class is for the trademarked TEAM BEES NPC
+public class TeamBees extends NPC {
 
-    public BreadGoose(Point location) {
-        super(location.x, location.y, new SpriteSheet(ImageLoader.load("BreadGoose.png"), 24, 24), "Goose");
+    public TeamBees(Point location) {
+        super(location.x, location.y, new SpriteSheet(ImageLoader.load("TeamBees.png"), 24, 24), "Bee1");
         isInteractable = true;
 
         // Get portrait frames
@@ -28,18 +28,20 @@ public class BreadGoose extends NPC {
 
         // Setup dialogue sequence
         dialogueSequence = new Level.DialogueSequence();
-        dialogueSequence.addMessage("Bready or not, here I crumb.", npcPortrait);
-        dialogueSequence.addMessage("No, cousin Gread. You were banished for being to bready.", playerPortrait);
-        dialogueSequence.addMessage("But I risen for just this occasion.", npcPortrait);
-        dialogueSequence.addMessage("No. *points wing and waddles away*\nCiabatta stay away from me.", playerPortrait);
+        dialogueSequence.addMessage("I am the trademarked bee of TeamBees.", npcPortrait);
+        dialogueSequence.addMessage("Well, nice to meet you I'm Gertrude.", playerPortrait);
+        dialogueSequence.addMessage("I can't beelieve that you are the Gertrude.", npcPortrait);
+        dialogueSequence.addMessage("Why, yes I am.", playerPortrait);
+        dialogueSequence.addMessage("Hive never been happier to meet you.\nBut I bet you got to bee going now.", npcPortrait);
+        dialogueSequence.addMessage("I bee-lieve you are right. *waddles off*", playerPortrait);
     }
 
     public void update(Player player) {
         // while npc is being talked to, it frowns
         if (isInDialogue) {
-            currentAnimationName = "Goose";
+            currentAnimationName = "Bee1";
         } else {
-            currentAnimationName = "Goose1";
+            currentAnimationName = "Bee2";
         }
 
         super.update(player);
@@ -48,13 +50,13 @@ public class BreadGoose extends NPC {
     @Override
     public HashMap<String, Frame[]> loadAnimations(SpriteSheet spriteSheet) {
         return new HashMap<String, Frame[]>() {{
-           put("Goose", new Frame[] {
+           put("Bee1", new Frame[] {
                    new FrameBuilder(spriteSheet.getSprite(0, 0))
                            .withScale(4)
                            .withImageEffect(ImageEffect.FLIP_HORIZONTAL)
                            .build()
            });
-            put("Goose1", new Frame[] {
+            put("Bee2", new Frame[] {
                     new FrameBuilder(spriteSheet.getSprite(1, 0))
                             .withScale(4)
                             .withImageEffect(ImageEffect.FLIP_HORIZONTAL)

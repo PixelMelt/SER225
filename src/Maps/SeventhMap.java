@@ -1,5 +1,8 @@
 package Maps;
 
+import Engine.Config;
+import EnhancedMapTiles.BreakBox;
+import EnhancedMapTiles.Buzzsaw;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.Spike;
 import Level.*;
@@ -19,22 +22,46 @@ public class SeventhMap extends Map {
     public ArrayList<EnhancedMapTile> loadEnhancedMapTiles() {
         ArrayList<EnhancedMapTile> enhancedMapTiles = new ArrayList<>();
 
-        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(101, 45).getLocation());
+        EndLevelBox endLevelBox = new EndLevelBox(getMapTile(159, 49).getLocation());
         enhancedMapTiles.add(endLevelBox);
 
-        for(int i = 55; i < 98; i++){
-            Spike spike1 = new Spike(getMapTile(i, 38).getLocation(),true);
-            enhancedMapTiles.add(spike1);
+                // add spikes
+        for (int y = 0; y < getHeight(); y++) {
+            for (int x = 0; x < getWidth(); x++) {
+                MapTile tile = getMapTile(x, y);
+                if (tile != null && tile.getTileIndex() == 16) {
+                    enhancedMapTiles.add(new Spike(tile.getLocation()));
+                    if (!Config.IS_EDITOR_MODE) {
+                        setTileIndex(x, y, -1);
+                    }
+                }
+            }
         }
 
-        for(int i = 62; i < 96; i++){
-            Spike spike1 = new Spike(getMapTile(i, 48).getLocation());
-            enhancedMapTiles.add(spike1);
+        // add buzzsaws
+        for (int y = 0; y < getHeight(); y++) {
+            for (int x = 0; x < getWidth(); x++) {
+                MapTile tile = getMapTile(x, y);
+                if (tile != null && tile.getTileIndex() == 15) {
+                    enhancedMapTiles.add(new Buzzsaw(tile.getLocation()));
+                    if (!Config.IS_EDITOR_MODE) {
+                        setTileIndex(x, y, -1);
+                    }
+                }
+            }
         }
 
-        for(int i = 9; i < 49; i++){
-            Spike spike1 = new Spike(getMapTile(i, 25).getLocation());
-            enhancedMapTiles.add(spike1);
+        // add breakboxes
+        for (int y = 0; y < getHeight(); y++) {
+            for (int x = 0; x < getWidth(); x++) {
+                MapTile tile = getMapTile(x, y);
+                if (tile != null && tile.getTileIndex() == 14) {
+                    enhancedMapTiles.add(new BreakBox(tile.getLocation()));
+                    if (!Config.IS_EDITOR_MODE) {
+                        setTileIndex(x, y, -1);
+                    }
+                }
+            }
         }
 
         return enhancedMapTiles;
