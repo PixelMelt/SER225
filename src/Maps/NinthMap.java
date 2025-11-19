@@ -5,7 +5,7 @@ import EnhancedMapTiles.Buzzsaw;
 import EnhancedMapTiles.EndLevelBox;
 import EnhancedMapTiles.Spike;
 import Level.*;
-import NPCs.BreadGoose;
+import NPCs.TeamBees;
 import Tilesets.CommonTileset;
 import java.util.ArrayList;
 
@@ -73,8 +73,8 @@ public class NinthMap extends Map {
     public ArrayList<NPC> loadNPCs() {
         ArrayList<NPC> npcs = new ArrayList<>();
 
-        //BreadGoose gread = new BreadGoose(getMapTile(127, 47).getLocation().subtractY(35));
-        //npcs.add(gread);
+        TeamBees Buzz = new TeamBees(getMapTile(0, 38).getLocation().subtractY(35));
+        npcs.add(Buzz);
 
         return npcs;
     }
