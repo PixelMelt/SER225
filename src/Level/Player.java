@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.awt.Color;
+import Engine.GraphicsHandler;
 
 public abstract class Player extends GameObject {
     // Death animation timer
@@ -82,6 +84,8 @@ public abstract class Player extends GameObject {
     protected static final int NODE_TILE_INDEX = 3;
     private static final int BITTEN_NODE_TILE_INDEX = 4; // new tile for bitten node
     protected static final float NODE_RADIUS = 1000f;
+    private List<BrownParticle> particles = new ArrayList<>();
+
 
     private final InputState inputState = new InputState();
     protected boolean isInvincible;
@@ -143,6 +147,46 @@ public abstract class Player extends GameObject {
         }
     }
 
+    public class BrownParticle {
+    public float x, y;
+    private float velX, velY;
+    private Color color;
+    private int size;
+
+    public BrownParticle(float x, float y) {
+        this.x = x;
+        this.y = y;
+
+        int r = 100 + (int)(Math.random() * 50);
+        int g = 50 + (int)(Math.random() * 30);
+        int b = 0;
+        color = new Color(r, g, b);
+
+        // cone size
+        velX = (float)((Math.random() - 0.5) * 8);
+        // initial upward velocity
+        velY = -6 + (float)(Math.random() * 3);
+
+        // pixel size
+        size = 3 + (int)(Math.random() * 4);
+    }
+
+    public void update() {
+        // gravity
+        velY += gravityAcceleration;
+
+        x += velX;
+        y += velY;
+    }
+
+    public void draw(GraphicsHandler graphicsHandler, int cameraOffsetX, int cameraOffsetY) {
+        int screenX = (int)x - cameraOffsetX;
+        int screenY = (int)y - cameraOffsetY;
+        graphicsHandler.drawFilledRectangle(screenX, screenY, size, size, color);
+    }
+}
+
+
     @Override
     public void update() {
         moveAmountX = 0;
@@ -155,6 +199,7 @@ public abstract class Player extends GameObject {
         }
 
         isOnMovingPlatform = false;
+        updateParticles();
     }
 
     private void updateRunning() {
@@ -490,12 +535,55 @@ public abstract class Player extends GameObject {
                 return;
             }
 
-            MapTile tileAtNewX = map.getTileByPosition((int) (newX + getWidth() / 2f), (int) getCenterY());
-            MapTile tileAtNewY = map.getTileByPosition((int) getCenterX(), (int) (newY + getHeight() / 2f));
+            // Check for collision 
+            float currentX = getX();
+            float currentY = getY();
+            float deltaX = newX - currentX;
+            float deltaY = newY - currentY;
 
             boolean collided = false;
-            if (tileAtNewX != null && tileAtNewX.isSolid()) collided = true;
-            if (tileAtNewY != null && tileAtNewY.isSolid()) collided = true;
+            if (Math.abs(deltaX) > 0.5f || Math.abs(deltaY) > 0.5f) {
+                float checkMargin = 2f;
+
+                // Check multiple points
+                float leftEdge = newX + checkMargin;
+                float rightEdge = newX + getWidth() - checkMargin;
+                float topEdge = newY + checkMargin;
+                float bottomEdge = newY + getHeight() - checkMargin;
+                float centerX = newX + getWidth() / 2f;
+                float centerY = newY + getHeight() / 2f;
+
+                if (Math.abs(deltaX) > 0.5f) {
+                    float checkX = deltaX > 0 ? rightEdge : leftEdge;
+                    MapTile midTile = map.getTileByPosition(checkX, centerY);
+                    if (midTile != null && midTile.isSolid()) {
+                        collided = true;
+                    }
+                }
+
+                if (Math.abs(deltaY) > 0.5f) {
+                    float checkY = deltaY > 0 ? bottomEdge : topEdge;
+                    MapTile midTile = map.getTileByPosition(centerX, checkY);
+                    if (midTile != null && midTile.isSolid()) {
+                        collided = true;
+                    }
+                }
+
+                // Corner checks
+                if (deltaX > 0.5f && deltaY > 0.5f) {
+                    MapTile cornerTile = map.getTileByPosition(rightEdge, bottomEdge);
+                    if (cornerTile != null && cornerTile.isSolid()) collided = true;
+                } else if (deltaX < -0.5f && deltaY > 0.5f) {
+                    MapTile cornerTile = map.getTileByPosition(leftEdge, bottomEdge);
+                    if (cornerTile != null && cornerTile.isSolid()) collided = true;
+                } else if (deltaX > 0.5f && deltaY < -0.5f) {
+                    MapTile cornerTile = map.getTileByPosition(rightEdge, topEdge);
+                    if (cornerTile != null && cornerTile.isSolid()) collided = true;
+                } else if (deltaX < -0.5f && deltaY < -0.5f) {
+                    MapTile cornerTile = map.getTileByPosition(leftEdge, topEdge);
+                    if (cornerTile != null && cornerTile.isSolid()) collided = true;
+                }
+            }
 
             if (collided) {
                 releaseGrapple();
@@ -515,27 +603,33 @@ public abstract class Player extends GameObject {
     }
 
     public void activateGrappleAt(Point anchor) {
-        if (anchor == null || map == null) return;
+    if (anchor == null || map == null) return;
 
-        this.grappleTarget = anchor;
-        this.isGrappling = true;
-
-        float dx = grappleTarget.x - getCenterX();
-        float dy = grappleTarget.y - getCenterY();
-        this.ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
-
-        this.swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
-
-        float tangentialVelocity = (velocityX * -dy + velocityY * dx) / ropeLength;
-        this.swingVelocity = tangentialVelocity / ropeLength;
-
-        this.velocityX = 0f;
-        this.velocityY = 0f;
-
-        this.applyingReleaseMomentum = false;
-        this.releaseVx = 0f;
-        this.releaseVy = 0f;
+    // Spawn particles at the grapple point
+    for (int i = 0; i < 10; i++) {
+        particles.add(new BrownParticle(anchor.x, anchor.y));
     }
+
+    this.grappleTarget = anchor;
+    this.isGrappling = true;
+
+    float dx = grappleTarget.x - getCenterX();
+    float dy = grappleTarget.y - getCenterY();
+    this.ropeLength = (float) Math.sqrt(dx * dx + dy * dy);
+
+    this.swingAngle = (float) Math.atan2(getCenterX() - grappleTarget.x, getCenterY() - grappleTarget.y);
+
+    float tangentialVelocity = (velocityX * -dy + velocityY * dx) / ropeLength;
+    this.swingVelocity = tangentialVelocity / ropeLength;
+
+    this.velocityX = 0f;
+    this.velocityY = 0f;
+
+    this.applyingReleaseMomentum = false;
+    this.releaseVx = 0f;
+    this.releaseVy = 0f;
+}
+
 
     protected void releaseGrapple() {
         releaseGrappleInternal(false);
@@ -882,5 +976,33 @@ public abstract class Player extends GameObject {
 
     public float getVelocityY() {
         return velocityY;
+    }
+
+    private void updateParticles() {
+        for (int i = particles.size() - 1; i >= 0; i--) {
+            BrownParticle p = particles.get(i);
+            p.update();
+
+            // Remove particles that fell off the bottom of the map
+            if (map != null && p.y > map.getHeightPixels()) {
+                particles.remove(i);
+            }
+        }
+    }
+
+    @Override
+    public void draw(GraphicsHandler graphicsHandler) {
+        // Draw the player sprite first
+        super.draw(graphicsHandler);
+
+        // Then draw all particles on top
+        if (map != null) {
+            int cameraX = Math.round(map.getCamera().getX());
+            int cameraY = Math.round(map.getCamera().getY());
+
+            for (BrownParticle particle : particles) {
+                particle.draw(graphicsHandler, cameraX, cameraY);
+            }
+        }
     }
 }
