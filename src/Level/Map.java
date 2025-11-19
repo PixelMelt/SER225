@@ -409,4 +409,8 @@ public abstract class Map {
             setMapTile(x, y, newTile);
         }
     }
+
+    public void remove(Object obj) {
+        // intentionally empty
+    }
 }
