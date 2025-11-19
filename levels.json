@@ -7,7 +7,7 @@
     },
     {
       "id": 1,
-      "name": "Test Map",
+      "name": "First Map",
       "className": "TestMap"
     },
     {
@@ -33,18 +33,18 @@
     {
       "id": 6,
       "name": "Sixth Map",
-      "className": "SixthMap"
+      "className": "NinthMap"
     },
     {
       "id": 7,
       "name": "Seventh Map",
-      "className": "SeventhMap"    
+      "className": "SixthMap"    
     
     },
     {
       "id": 9,
-      "name": "Ninth Map",
-      "className": "NinthMap"    
+      "name": "Eighth Map",
+      "className": "SeventhMap"    
     
     }
   ]

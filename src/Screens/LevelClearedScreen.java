@@ -4,14 +4,38 @@ import Engine.GraphicsHandler;
 import Engine.Screen;
 import Engine.ScreenManager;
 import SpriteFont.SpriteFont;
-
 import java.awt.*;
+import java.util.Random;
 
 // This class is for the level cleared screen
 public class LevelClearedScreen extends Screen {
     protected SpriteFont winMessage;
     protected SpriteFont timeDisplay;
     protected long finalTimeMs = 0L;
+    protected Random random = new Random();
+
+    protected String[] sarcasticMessages = {
+        "Wow, you actually did it!",
+        "Finally! We were getting worried.",
+        "Success! Your goose is slightly less cooked!",
+        "You beat the level! Shocking development!",
+        "Victory! Maybe you ARE a gamer after all...",
+        "Level Complete! Your participation trophy awaits!",
+        "You won! The bread gods smile upon you today.",
+        "Congratulations! You met the bare minimum!",
+        "Success! You've peaked for the day.",
+        "Level Cleared! Your neck skills are... adequate.",
+        "You did it! Time to update your resume!",
+        "Level Complete! The goose community is mildly impressed.",
+        "You won! Don't let it go to your head.",
+        "Congratulations! You've mastered the art of not failing!",
+        "You beat it! The bar was low, but still!",
+        "Victory! You can swing AND grab bread! Revolutionary!",
+        "Congratulations! You remembered which buttons to press!",
+        "You won! Time to tell everyone you know!",
+        "Level Cleared! You're on fire! Well, lukewarm at least.",
+        "Congratulations! You're slightly above average!",
+    };
 
     public LevelClearedScreen() {
         initialize();
@@ -19,7 +43,8 @@ public class LevelClearedScreen extends Screen {
 
     @Override
     public void initialize() {
-        winMessage = new SpriteFont("Level Cleared", 320, 239, "Arial", 30, Color.white);
+        String randomMessage = sarcasticMessages[random.nextInt(sarcasticMessages.length)];
+        winMessage = new SpriteFont(randomMessage, 320, 239, "Arial", 30, Color.white);
     }
 
     @Override

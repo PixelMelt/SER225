@@ -44,8 +44,8 @@ public class LevelSelectorScreen extends Screen {
         background = new TitleScreenMap();
         background.setAdjustCamera(false);
 
-        titleText = new SpriteFont("SELECT LEVEL", Config.GAME_WINDOW_WIDTH / 2 - 120, 50, "Arial", 40, new Color(255, 215, 0));
-        titleText.setOutlineColor(Colors.BLACK);
+        titleText = new SpriteFont("SELECT LEVEL", Config.GAME_WINDOW_WIDTH / 2 - 120, 50, "Arial", 40, Colors.WHITE);
+        titleText.setOutlineColor(Colors.WHITE);
         titleText.setOutlineThickness(3);
 
         instructionText = new SpriteFont("Use Number Keys or Arrow Keys + SPACE to Select | ESC to Go Back",
@@ -263,6 +263,9 @@ public class LevelSelectorScreen extends Screen {
         titleText.draw(graphicsHandler);
         instructionText.draw(graphicsHandler);
 
+        // Draw row grouping boxes (backgrounds for difficulty levels)
+        drawRowGroupingBoxes(graphicsHandler);
+
         // Draw level grid
         for (int i = 0; i < levels.size(); i++) {
             int row = i / GRID_COLS;
@@ -274,13 +277,67 @@ public class LevelSelectorScreen extends Screen {
         }
     }
 
+    private void drawRowGroupingBoxes(GraphicsHandler graphicsHandler) {
+        Graphics2D g2d = (Graphics2D) graphicsHandler.getGraphics();
+        g2d.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int numRows = (levels.size() + GRID_COLS - 1) / GRID_COLS;
+
+        // Difficulty labels for each row
+        String[] difficultyLabels = {"EASY", "MEDIUM", "HARD", "EXPERT", "INSANE"};
+
+        // Grouping box dimensions
+        int boxWidth = (GRID_COLS * BOX_SIZE) + ((GRID_COLS - 1) * BOX_SPACING) + 40;
+        int boxHeight = BOX_SIZE + 40;
+        int boxX = GRID_START_X - 20;
+
+        for (int row = 0; row < numRows; row++) {
+            int boxY = GRID_START_Y - 20 + row * (BOX_SIZE + BOX_SPACING);
+
+            g2d.setColor(new Color(50, 50, 50, 100));
+            g2d.fillRoundRect(boxX, boxY, boxWidth, boxHeight, 30, 30);
+
+            g2d.setColor(new Color(100, 100, 100, 150));
+            g2d.setStroke(new java.awt.BasicStroke(2));
+            g2d.drawRoundRect(boxX, boxY, boxWidth, boxHeight, 30, 30);
+
+            if (row < difficultyLabels.length) {
+                String label = difficultyLabels[row];
+
+                java.awt.geom.AffineTransform originalTransform = g2d.getTransform();
+
+                int textX = boxX + boxWidth - 15;
+                int textY = boxY + boxHeight / 2 - 25;
+
+                g2d.rotate(Math.toRadians(90), textX, textY);
+
+                Font labelFont = new Font("Arial", Font.BOLD, 20);
+                g2d.setFont(labelFont);
+
+                g2d.setColor(Color.BLACK);
+                for (int dx = -2; dx <= 2; dx++) {
+                    for (int dy = -2; dy <= 2; dy++) {
+                        if (dx != 0 || dy != 0) {
+                            g2d.drawString(label, textX + dx, textY + dy);
+                        }
+                    }
+                }
+
+                g2d.setColor(Color.WHITE);
+                g2d.drawString(label, textX, textY);
+
+                g2d.setTransform(originalTransform);
+            }
+        }
+    }
+
     /**
      * Draw a "squircle" box for a level with its info
      */
     private void drawLevelBox(GraphicsHandler graphicsHandler, LevelInfo level, int x, int y, boolean selected, int displayNum) {
         // Box colors
-        Color boxColor = selected ? new Color(255, 215, 0) : new Color(49, 207, 240);
-        Color borderColor = selected ? new Color(200, 170, 0) : new Color(30, 150, 180);
+        Color boxColor = selected ? Color.WHITE : Color.GRAY;
+        Color borderColor = selected ? Color.WHITE : Color.BLACK;
 
         // Draw squircle-like effect using Graphics2D directly
         Graphics2D g2d = (Graphics2D) graphicsHandler.getGraphics();
