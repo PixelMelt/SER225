@@ -29,7 +29,7 @@ public class InstructionsScreen extends Screen {
         instructionsLabel = new SpriteFont("INSTRUCTIONS", 460, 50, "Times New Roman", 40, new Color(49, 207, 240));
         instructionsLabel.setOutlineColor(Color.black);
         instructionsLabel.setOutlineThickness(3);
-    keyLabel = new SpriteFont("Arrow Keys / WASD: Movement\nX / N: Goose Grapple\nZ / M: Honk\nSpace: Talk to NPC", 470, 121, "Times New Roman", 20, Color.black);
+    keyLabel = new SpriteFont("Arrow Keys / WASD: Movement\nX / N: Goose Grapple\nZ / M: Honk\nSpace: Talk to NPC\nP: Pause the Game\nEsc: Go Back to Main Menu", 470, 121, "Times New Roman", 20, Color.black);
         returnInstructionsLabel = new SpriteFont("Press Space to return to the menu", 20, 532, "Times New Roman", 30, Color.white);
         keyLocker.lockKey(Key.SPACE);
     }
